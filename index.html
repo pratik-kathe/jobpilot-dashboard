@@ -1,0 +1,853 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>JobPilot Queue</title>
+<meta name="description" content="Pratik's job-search review queue: matches, tailored resumes, tracker and insights.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Schibsted+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
+<script>
+  // apply saved theme before paint
+  try { const t = localStorage.getItem("jp:theme"); if (t === "light" || t === "dark") document.documentElement.dataset.theme = t; } catch {}
+</script>
+<style>
+:root{
+  --bg:#EEF1F6; --panel:#FFFFFF; --panel-2:#F6F8FB; --ink:#15203A; --muted:#5A6478; --faint:#8A93A6; --line:#D9DEE8;
+  --cobalt:#2B4BFF; --on-cobalt:#FFFFFF; --cobalt-soft:#E4E9FF; --cobalt-ink:#2238CC;
+  --marigold:#B87400; --marigold-soft:#FFF2D3; --good:#127A4E; --good-soft:#DDF3E8; --bad:#B42318; --bad-soft:#FDE6E3;
+  --shadow:0 1px 2px rgba(21,32,58,.06), 0 8px 24px rgba(21,32,58,.06);
+  --r-s:6px; --r-m:10px; --r-l:16px;
+  --display:"Bricolage Grotesque", system-ui, sans-serif; --text:"Schibsted Grotesk", system-ui, sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0D1322; --panel:#151D31; --panel-2:#1B2540; --ink:#E8ECF5; --muted:#9CA6BA; --faint:#6F7A90; --line:#28334D;
+    --cobalt:#8297FF; --on-cobalt:#0D1322; --cobalt-soft:#1E2A57; --cobalt-ink:#AAB8FF;
+    --marigold:#FFC24D; --marigold-soft:#3A2E12; --good:#4CD39A; --good-soft:#123326; --bad:#FF8A7A; --bad-soft:#3A1A17;
+    --shadow:0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.25); color-scheme: dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0D1322; --panel:#151D31; --panel-2:#1B2540; --ink:#E8ECF5; --muted:#9CA6BA; --faint:#6F7A90; --line:#28334D;
+  --cobalt:#8297FF; --on-cobalt:#0D1322; --cobalt-soft:#1E2A57; --cobalt-ink:#AAB8FF;
+  --marigold:#FFC24D; --marigold-soft:#3A2E12; --good:#4CD39A; --good-soft:#123326; --bad:#FF8A7A; --bad-soft:#3A1A17;
+  --shadow:0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.25); color-scheme: dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 var(--text);-webkit-font-smoothing:antialiased}
+button,input,textarea,select{font:inherit;color:inherit}
+a{color:var(--cobalt-ink)}
+:focus-visible{outline:2px solid var(--cobalt);outline-offset:2px;border-radius:4px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+
+/* ---------- top bar ---------- */
+header.top{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:20px;padding:12px 20px;background:var(--panel);border-bottom:1px solid var(--line)}
+.brand{font:700 22px/1 var(--display);letter-spacing:-.02em;white-space:nowrap}
+.brand small{display:block;font:400 12px var(--text);color:var(--muted);margin-top:5px;letter-spacing:0}
+.stats{display:flex;gap:6px;flex:1;min-width:0;overflow-x:auto}
+.stat{padding:6px 12px;border-radius:var(--r-m);background:var(--panel-2);white-space:nowrap}
+.stat b{font:700 18px/1 var(--display);display:block}
+.stat span{font-size:12px;color:var(--muted)}
+.top-actions{display:flex;gap:6px;align-items:center}
+.btn{display:inline-flex;align-items:center;gap:6px;text-decoration:none;border:1px solid var(--line);background:var(--panel);border-radius:var(--r-s);padding:7px 12px;cursor:pointer;font-weight:500;line-height:1.3;white-space:nowrap}
+.btn:hover{border-color:var(--ink)}
+.btn.primary{background:var(--cobalt);border-color:var(--cobalt);color:var(--on-cobalt)}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn.ghost{border-color:transparent;background:transparent}
+.btn.ghost:hover{background:var(--panel-2);border-color:transparent}
+.btn.small{padding:4px 9px;font-size:13px}
+.btn:disabled{opacity:.5;cursor:default}
+.icon-btn{width:36px;height:36px;justify-content:center;padding:0}
+.icon-btn svg{width:18px;height:18px}
+.running{display:none;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+.running.on{display:flex}
+.pulse{width:8px;height:8px;border-radius:50%;background:var(--cobalt);animation:pulse 1.2s infinite}
+@keyframes pulse{50%{opacity:.25}}
+
+/* ---------- layout ---------- */
+.app{display:grid;grid-template-columns:minmax(330px,420px) 1fr;height:calc(100vh - 65px)}
+.app.wide{grid-template-columns:1fr;height:auto}
+.app.wide .detail{overflow:visible}
+#wideTabs{display:none;background:var(--panel)}
+.app.wide .listcol{display:none}
+.listcol{display:flex;flex-direction:column;border-right:1px solid var(--line);min-height:0;background:var(--panel)}
+nav.tabs{display:flex;gap:2px;padding:8px 10px 0;overflow-x:auto;border-bottom:1px solid var(--line);background:var(--panel)}
+.app.wide nav.tabs{display:none}
+.tab{border:0;background:none;padding:9px 10px;border-bottom:2px solid transparent;cursor:pointer;color:var(--muted);font-weight:500;white-space:nowrap}
+.tab[aria-selected="true"]{color:var(--ink);border-color:var(--cobalt)}
+.tab .n{font-size:12px;margin-left:5px;padding:1px 6px;border-radius:999px;background:var(--panel-2);color:var(--muted)}
+.filters{display:flex;flex-wrap:wrap;gap:6px;padding:10px 12px;border-bottom:1px solid var(--line)}
+.search{flex:1 1 100%;display:flex;gap:6px}
+.search input{flex:1;padding:8px 10px;border:1px solid var(--line);border-radius:var(--r-s);background:var(--panel-2)}
+.search select{padding:8px;border:1px solid var(--line);border-radius:var(--r-s);background:var(--panel-2)}
+.chip{border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:3px 10px;font-size:13px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.list{overflow-y:auto;flex:1}
+.row{display:grid;grid-template-columns:48px 1fr;gap:12px;padding:12px 14px;border:0;border-bottom:1px solid var(--line);border-left:3px solid transparent;cursor:pointer;background:none;width:100%;text-align:left}
+.row:hover{background:var(--panel-2)}
+.row[aria-current="true"]{background:var(--cobalt-soft);border-left-color:var(--cobalt)}
+.score{font:700 24px/1 var(--display);letter-spacing:-.02em;text-align:right;padding-top:2px}
+.score.hi{color:var(--cobalt-ink)} .score.mid{color:var(--ink)} .score.lo{color:var(--faint)}
+.row h3{margin:0;font:600 15px/1.3 var(--text)}
+.row .co{color:var(--muted);font-size:13.5px}
+.tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+.tag{font-size:12px;padding:1px 7px;border-radius:var(--r-s);background:var(--panel-2);color:var(--muted)}
+.tag.pack{background:var(--cobalt-soft);color:var(--cobalt-ink)}
+.tag.warn{background:var(--marigold-soft);color:var(--ink)}
+.tag.bad{background:var(--bad-soft);color:var(--bad)}
+.tag.good{background:var(--good-soft);color:var(--good)}
+.list-foot{padding:10px 14px;font-size:12px;color:var(--faint)}
+kbd{font:500 11px var(--text);padding:1px 5px;border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;background:var(--panel)}
+
+/* ---------- detail ---------- */
+.detail{overflow-y:auto;min-height:0}
+.inner{max-width:820px;padding:28px 32px 90px}
+.app.wide .inner{max-width:1100px}
+.detail h1{font:700 30px/1.15 var(--display);letter-spacing:-.02em;margin:0 0 6px}
+.meta{color:var(--muted)}
+.meta.small{font-size:13px;margin-top:4px}
+.verdict{display:grid;grid-template-columns:auto 1fr;gap:18px;align-items:center;margin:20px 0;padding:18px;border-radius:var(--r-l);background:var(--panel);border:1px solid var(--line)}
+.ring{--p:0;width:86px;height:86px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(var(--cobalt) calc(var(--p)*1%), var(--line) 0)}
+.ring span{width:70px;height:70px;border-radius:50%;background:var(--panel);display:grid;place-items:center;font:700 28px var(--display)}
+.verdict p{margin:0 0 4px}
+.cols{display:grid;grid-template-columns:1fr 1fr;column-gap:16px}
+.box{background:var(--panel);border:1px solid var(--line);border-radius:var(--r-l);padding:16px 18px;margin-top:16px}
+.box h2{font:600 16px var(--text);margin:0 0 10px}
+.box ul{margin:0;padding-left:18px}
+.box.warnbox{border-color:var(--marigold);background:var(--marigold-soft)}
+
+/* apply kit */
+.kit{background:var(--panel);border:1px solid var(--line);border-radius:var(--r-l);box-shadow:var(--shadow);margin-top:4px;overflow:hidden}
+.kit-head{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid var(--line)}
+.kit-head h2{margin:0;font:700 18px var(--display)}
+.step{display:grid;grid-template-columns:32px 1fr;gap:12px;padding:16px 18px;border-bottom:1px solid var(--line)}
+.step:last-child{border-bottom:0}
+.step .num{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font:700 14px var(--display);background:var(--panel-2);color:var(--muted)}
+.step.done .num{background:var(--good-soft);color:var(--good)}
+.step h3{margin:2px 0 8px;font:600 15px var(--text)}
+.step .actions{display:flex;flex-wrap:wrap;gap:8px}
+.field{margin-top:12px}
+.field-head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:4px}
+.field-head b{font-size:13px;color:var(--muted);font-weight:600}
+textarea{width:100%;min-height:70px;padding:10px;border:1px solid var(--line);border-radius:var(--r-s);background:var(--panel-2);resize:vertical;line-height:1.5}
+textarea.tall{min-height:170px}
+input.field-in{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:var(--r-s);background:var(--panel-2)}
+label.f{display:block;font-size:13px;font-weight:600;margin:10px 0 4px}
+.jd{white-space:pre-wrap;font-size:14px;max-height:460px;overflow:auto}
+details summary{cursor:pointer;font-weight:600}
+.empty{padding:56px 32px;color:var(--muted);max-width:560px}
+.empty h2{font:700 24px var(--display);color:var(--ink);margin:0 0 8px}
+.back{display:none}
+
+/* tracker */
+table.t{width:100%;border-collapse:collapse;font-size:14px}
+table.t th{font-weight:600;color:var(--muted);font-size:12.5px;text-align:left;padding:8px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+table.t td{padding:10px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+table.t td.num, table.t th.num{text-align:right;font-variant-numeric:tabular-nums}
+table.t select{padding:4px 6px;border:1px solid var(--line);border-radius:var(--r-s);background:var(--panel-2)}
+table.t tr:hover td{background:var(--panel-2)}
+.linkish{background:none;border:0;padding:0;color:var(--ink);font-weight:600;cursor:pointer;text-align:left}
+.linkish:hover{text-decoration:underline}
+
+/* insights */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-top:16px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:var(--r-l);padding:14px 16px}
+.kpi b{display:block;font:700 30px/1.1 var(--display);letter-spacing:-.02em}
+.kpi span{font-size:13px;color:var(--muted)}
+.chart{position:relative}
+.bars{display:flex;align-items:flex-end;gap:2px;height:180px;padding-top:18px;border-bottom:1px solid var(--line)}
+.bar-col{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%;position:relative;cursor:default}
+.bar{width:min(36px,70%);background:var(--cobalt);border-radius:4px 4px 0 0;min-height:0}
+.bar-col:hover .bar,.bar-col:focus .bar{filter:brightness(1.15)}
+.bar-col .val{position:absolute;font-size:12px;color:var(--ink);font-weight:600}
+.xlabels{display:flex;gap:2px;margin-top:6px}
+.xlabels span{flex:1;text-align:center;font-size:11.5px;color:var(--muted)}
+.tip{position:absolute;pointer-events:none;background:var(--ink);color:var(--bg);font-size:12.5px;padding:6px 9px;border-radius:var(--r-s);white-space:nowrap;transform:translate(-50%,-100%);opacity:0;transition:opacity .1s}
+.tip.on{opacity:1}
+.funnel{display:grid;grid-template-columns:120px 1fr 48px;gap:8px 12px;align-items:center;font-size:14px}
+.funnel .track{height:14px;background:var(--panel-2);border-radius:4px;overflow:hidden}
+.funnel .fill{height:100%;background:var(--cobalt);border-radius:0 4px 4px 0}
+.funnel .n{text-align:right;font-variant-numeric:tabular-nums;font-weight:600}
+
+/* dialogs & toast */
+dialog{border:1px solid var(--line);border-radius:var(--r-l);background:var(--panel);color:var(--ink);padding:24px;width:min(560px,94vw);box-shadow:var(--shadow)}
+dialog::backdrop{background:rgba(8,12,24,.5)}
+dialog h2{font:700 22px var(--display);margin:0 0 6px}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:var(--r-s);opacity:0;pointer-events:none;transition:opacity .2s;z-index:20;max-width:90vw}
+.toast.show{opacity:1}
+.keys{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:14px}
+
+@media (max-width:900px){
+  header.top{flex-wrap:wrap;gap:10px;padding:10px 16px}
+  .stats{order:3;flex-basis:100%}
+  .app{grid-template-columns:1fr;height:auto;min-height:calc(100vh - 120px)}
+  .app:not(.wide) .detail{display:none}
+  .app.show-detail .listcol{display:none}
+  .app.show-detail .detail{display:block}
+  .app.wide nav.tabs{display:flex}
+  .back{display:inline-flex;margin-bottom:12px}
+  .inner{padding:18px 16px 70px}
+  .cols{grid-template-columns:1fr}
+  .detail h1{font-size:24px}
+  .hide-m{display:none}
+  .funnel{grid-template-columns:90px 1fr 40px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="brand">JobPilot<small id="sub">Loading…</small></div>
+  <div class="stats" id="stats" aria-label="Summary"></div>
+  <div class="running" id="running" role="status"><span class="pulse"></span><span id="runningText">Scan running…</span></div>
+  <div class="top-actions">
+    <button class="btn" id="btnAdd" title="Paste any job and get a tailored resume">Tailor any job</button>
+    <button class="btn hide-m" id="btnRun">Scan now</button>
+    <button class="btn ghost icon-btn" id="btnTheme" aria-label="Switch theme"></button>
+    <button class="btn ghost icon-btn" id="btnKeys" aria-label="Keyboard shortcuts"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2.5" y="6" width="19" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M7 14h10"/></svg></button>
+    <button class="btn ghost icon-btn" id="btnSettings" aria-label="Connection settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
+  </div>
+</header>
+
+<div class="app" id="app">
+  <section class="listcol" aria-label="Jobs">
+    <nav class="tabs" role="tablist" id="tabs"></nav>
+    <div class="filters" id="filters">
+      <div class="search">
+        <input type="search" id="q" placeholder="Search title, company or skill" aria-label="Search jobs">
+        <select id="sort" aria-label="Sort"><option value="score">Best match</option><option value="new">Newest</option></select>
+      </div>
+    </div>
+    <div class="list" id="list"></div>
+  </section>
+  <main class="detail" id="detail"></main>
+</div>
+
+<dialog id="dlgSettings">
+  <h2>Connect your repository</h2>
+  <p class="meta">The dashboard reads results from your private GitHub repo and saves your progress back to it. The token is stored only in this browser.</p>
+  <form method="dialog" id="formSettings">
+    <label class="f" for="sOwner">GitHub username</label><input class="field-in" id="sOwner" value="pratik-kathe" autocomplete="off" required>
+    <label class="f" for="sRepo">Repository</label><input class="field-in" id="sRepo" value="jobpilot" required>
+    <label class="f" for="sBranch">Branch</label><input class="field-in" id="sBranch" value="main">
+    <label class="f" for="sToken">Fine-grained access token</label><input class="field-in" id="sToken" type="password" autocomplete="off" required>
+    <p class="meta" style="font-size:13px">Create one at github.com/settings/personal-access-tokens/new — only the jobpilot repo, with <b>Contents</b> and <b>Actions</b> set to Read and write.</p>
+    <div class="step actions" style="padding:0;border:0;display:flex;gap:8px;margin-top:14px">
+      <button class="btn primary" value="save">Save and load</button>
+      <button class="btn" value="cancel" formnovalidate>Cancel</button>
+      <button class="btn ghost" value="forget" formnovalidate>Forget token</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="dlgAdd">
+  <h2>Tailor any job</h2>
+  <p class="meta">Found a job somewhere else? Paste it here. Your tailored resume, cover note and answers appear in about 2 minutes.</p>
+  <form method="dialog" id="formAdd">
+    <label class="f" for="aTitle">Job title</label><input class="field-in" id="aTitle" required>
+    <label class="f" for="aCompany">Company</label><input class="field-in" id="aCompany" required>
+    <label class="f" for="aUrl">Job link (optional)</label><input class="field-in" id="aUrl" type="url">
+    <label class="f" for="aJd">Job description</label><textarea id="aJd" class="tall" required minlength="80"></textarea>
+    <div style="display:flex;gap:8px;margin-top:14px">
+      <button class="btn primary" value="go">Create application pack</button>
+      <button class="btn" value="cancel" formnovalidate>Cancel</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="dlgKeys">
+  <h2>Keyboard shortcuts</h2>
+  <div class="keys" style="margin-top:12px">
+    <span><kbd>J</kbd> <kbd>K</kbd></span><span>Next / previous job</span>
+    <span><kbd>O</kbd></span><span>Open the job posting</span>
+    <span><kbd>D</kbd></span><span>Download tailored resume</span>
+    <span><kbd>A</kbd></span><span>Mark applied and go to the next job</span>
+    <span><kbd>X</kbd></span><span>Not for me, go to the next job</span>
+    <span><kbd>/</kbd></span><span>Search</span>
+    <span><kbd>1</kbd>–<kbd>5</kbd></span><span>Switch tabs</span>
+  </div>
+  <form method="dialog" style="margin-top:16px"><button class="btn">Close</button></form>
+</dialog>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(() => {
+"use strict";
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const safeUrl = u => /^https?:\/\//i.test(u || "") ? u : "";
+const store = {
+  get(k, d){ try { const v = localStorage.getItem("jp:" + k); return v == null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v){ try { localStorage.setItem("jp:" + k, JSON.stringify(v)); } catch {} },
+  del(k){ try { localStorage.removeItem("jp:" + k); } catch {} }
+};
+function toast(msg){ const t = $("#toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove("show"), 2800); }
+
+// ------------------------------------------------------------ theme
+const ICON = {
+  light: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>',
+  dark: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>',
+  system: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg>'
+};
+function applyTheme(t){
+  if (t === "light" || t === "dark") document.documentElement.dataset.theme = t; else delete document.documentElement.dataset.theme;
+  $("#btnTheme").innerHTML = ICON[t] || ICON.system;
+  $("#btnTheme").setAttribute("aria-label", `Theme: ${t}. Click to change`);
+  $("#btnTheme").title = `Theme: ${t[0].toUpperCase() + t.slice(1)}`;
+}
+let theme = (() => { try { return localStorage.getItem("jp:theme") || "system"; } catch { return "system"; } })();
+applyTheme(theme);
+$("#btnTheme").onclick = () => {
+  theme = { system: "light", light: "dark", dark: "system" }[theme] || "system";
+  try { localStorage.setItem("jp:theme", theme); } catch {}
+  applyTheme(theme); toast(`Theme: ${theme}`);
+};
+
+// ------------------------------------------------------------ GitHub API
+let cfg = store.get("cfg", null);
+const DEMO = !cfg && window.JOBPILOT_DEMO;
+async function gh(path, opts = {}){
+  const r = await fetch(`https://api.github.com/repos/${cfg.owner}/${cfg.repo}${path}`, {
+    ...opts, cache: "no-store",
+    headers: { "Authorization": `Bearer ${cfg.token}`, "X-GitHub-Api-Version": "2022-11-28",
+      "Accept": opts.raw ? "application/vnd.github.raw+json" : "application/vnd.github+json", ...(opts.headers || {}) }
+  });
+  if (!r.ok && !(opts.allow404 && r.status === 404)) {
+    if (r.status === 401) throw new Error("Token rejected. Open settings (gear icon) and paste a fresh token.");
+    if (r.status === 403) throw new Error("The token is missing a permission. It needs Contents and Actions: Read and write.");
+    if (r.status === 404) throw new Error("Repository not found. Check the username, repo name and the token's repo access.");
+    throw new Error(`GitHub error ${r.status}`);
+  }
+  return r;
+}
+const ref = () => `ref=${encodeURIComponent(cfg.branch || "main")}`;
+async function readJson(path, fallback){
+  const r = await gh(`/contents/${path}?${ref()}`, { raw: true, allow404: true });
+  return r.status === 404 ? fallback : r.json();
+}
+const b64 = s => btoa(unescape(encodeURIComponent(s)));
+async function writeFile(path, content, message){
+  for (let attempt = 0; attempt < 4; attempt++) {
+    const head = await gh(`/contents/${path}?${ref()}`, { allow404: true });
+    const sha = head.status === 404 ? undefined : (await head.json()).sha;
+    const body = typeof content === "function" ? await content() : content;
+    const r = await fetch(`https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/${path}`, {
+      method: "PUT", headers: { "Authorization": `Bearer ${cfg.token}`, "Accept": "application/vnd.github+json" },
+      body: JSON.stringify({ message, content: b64(body), sha, branch: cfg.branch || "main" })
+    });
+    if (r.ok) return;
+    if (r.status !== 409 && r.status !== 422) throw new Error(`Couldn't save (GitHub ${r.status}).`);
+    await new Promise(res => setTimeout(res, 700 * (attempt + 1)));
+  }
+  throw new Error("Couldn't save after several tries. Reload and try again.");
+}
+async function dispatch(mode){
+  await gh(`/actions/workflows/scan.yml/dispatches`, { method: "POST", body: JSON.stringify({ ref: cfg.branch || "main", inputs: { mode } }) });
+}
+
+// ------------------------------------------------------------ state
+let jobs = [], status = {}, health = {}, runs = [], updatedAt = "";
+let tab = store.get("tab", "queue"), bucket = store.get("bucket", "all"), sort = store.get("sort", "score"), query = "", selected = null;
+const packCache = {};
+const STATUSES = [["applied","Applied"],["interview","Interview"],["offer","Offer"],["rejected","Rejected"],["skipped","Not for me"]];
+const LABEL = Object.fromEntries([["new","To review"], ...STATUSES]);
+const BUCKETS = [["all","All"],["pack","Pack ready"],["remote_india","Remote India"],["remote_global","Remote global"],["onsite_mumbai","Mumbai office"],["onsite_international","Abroad"]];
+const TABS = [["queue","To review"],["alerts","Needs description"],["applied","Tracker"],["insights","Insights"],["health","Sources"]];
+const WIDE = new Set(["applied","insights","health"]);
+const st = id => (status[id] || {}).status || "new";
+const days = iso => iso ? Math.floor((Date.now() - new Date(iso)) / 864e5) : null;
+const appliedAt = id => (status[id] || {}).applied_at || ((status[id] || {}).status && (status[id] || {}).updated_at);
+const followUp = j => st(j.id) === "applied" && days(appliedAt(j.id)) >= 7;
+const scoreClass = n => n >= 70 ? "hi" : n >= 50 ? "mid" : "lo";
+
+async function load(quiet){
+  if (!quiet) $("#sub").textContent = "Loading…";
+  try {
+    if (DEMO) {
+      ({ jobs, status, health, runs } = window.JOBPILOT_DEMO); updatedAt = window.JOBPILOT_DEMO.updated_at;
+    } else if (cfg) {
+      const [j, s, h, r] = await Promise.all([readJson("data/jobs.json", { jobs: [] }), readJson("data/status.json", {}),
+        readJson("data/source_state.json", {}), readJson("data/run_log.json", [])]);
+      jobs = j.jobs || []; updatedAt = j.updated_at; status = s; health = h; runs = r;
+    }
+  } catch (e) { $("#sub").textContent = e.message; toast(e.message); }
+  setSub(); render();
+}
+function setSub(){
+  const when = updatedAt ? new Date(updatedAt).toLocaleString([], { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" }) : "never";
+  $("#sub").textContent = DEMO ? "Snapshot — connect to save progress" : cfg ? `Last scan ${when}` : "Not connected";
+}
+
+// ------------------------------------------------------------ filtering
+function inTab(j, t = tab){
+  const s = st(j.id);
+  if (t === "queue") return s === "new" && !j.needs_jd && !(j.scam_flags || []).length;
+  if (t === "alerts") return s === "new" && (j.needs_jd || (j.scam_flags || []).length);
+  if (t === "applied") return ["applied","interview","offer","rejected"].includes(s);
+  return false;
+}
+function visible(){
+  const q = query.trim().toLowerCase();
+  const out = jobs.filter(j => inTab(j)
+    && (bucket === "all" || (bucket === "pack" ? j.pack : j.bucket === bucket))
+    && (!q || `${j.title} ${j.company} ${j.location} ${(j.kw_matched || []).join(" ")}`.toLowerCase().includes(q)));
+  if (sort === "new") out.sort((a, b) => (b.first_seen || "").localeCompare(a.first_seen || ""));
+  else out.sort((a, b) => (b.rank ?? 0) - (a.rank ?? 0));
+  return out;
+}
+
+// ------------------------------------------------------------ header stats
+function renderStats(){
+  const weekAgo = Date.now() - 7 * 864e5;
+  const fresh = jobs.filter(j => st(j.id) === "new" && j.first_seen && new Date(j.first_seen) > Date.now() - 864e5).length;
+  const packs = jobs.filter(j => j.pack && st(j.id) === "new").length;
+  const applied7 = Object.values(status).filter(s => ["applied","interview","offer","rejected"].includes(s.status) && new Date(s.applied_at || s.updated_at) > weekAgo).length;
+  const interviews = Object.values(status).filter(s => ["interview","offer"].includes(s.status)).length;
+  $("#stats").innerHTML = [[fresh,"new today"],[packs,"packs ready"],[applied7,"applied, last 7 days"],[interviews,"interviews"]]
+    .map(([n, l]) => `<div class="stat"><b>${n}</b><span>${l}</span></div>`).join("");
+}
+
+// ------------------------------------------------------------ list
+function renderTabs(){
+  $("#tabs").innerHTML = TABS.map(([k, label], i) => {
+    const n = ["queue","alerts","applied"].includes(k) ? `<span class="n">${jobs.filter(j => inTab(j, k)).length}</span>` : "";
+    return `<button class="tab" role="tab" data-tab="${k}" aria-selected="${tab===k}" title="Shortcut: ${i+1}">${label}${n}</button>`;
+  }).join("");
+  $("#tabs").querySelectorAll(".tab").forEach(b => b.onclick = () => switchTab(b.dataset.tab));
+}
+function switchTab(t){ tab = t; store.set("tab", t); selected = null; $("#app").classList.remove("show-detail"); render(); }
+function renderFilters(){
+  const f = $("#filters");
+  f.querySelectorAll(".chip").forEach(c => c.remove());
+  BUCKETS.forEach(([k, label]) => {
+    const c = document.createElement("button"); c.className = "chip"; c.textContent = label;
+    c.setAttribute("aria-pressed", bucket === k); c.onclick = () => { bucket = k; store.set("bucket", k); renderFilters(); renderList(); };
+    f.appendChild(c);
+  });
+  $("#sort").value = sort;
+}
+function rowTags(j){
+  const t = [];
+  if (j.pack) t.push(`<span class="tag pack">Pack ready</span>`);
+  if (j.needs_jd) t.push(`<span class="tag warn">Needs description</span>`);
+  if (j.visa === "sponsorship_or_relocation") t.push(`<span class="tag good">Visa / relocation</span>`);
+  if (j.visa === "no_sponsorship") t.push(`<span class="tag bad">No sponsorship</span>`);
+  if ((j.scam_flags || []).length) t.push(`<span class="tag bad">Check posting</span>`);
+  t.push(`<span class="tag">${esc(j.loc_reason || j.location || "")}</span>`);
+  return t.join("");
+}
+function renderList(){
+  const list = $("#list");
+  if (!cfg && !DEMO) { list.innerHTML = `<div class="empty"><h2>Connect to start</h2>Click the gear icon and add your GitHub token. Your matches will appear here.</div>`; return; }
+  const items = visible();
+  if (!items.length) {
+    list.innerHTML = `<div class="empty">${tab === "queue" ? "Nothing waiting. New matches arrive at 8:17 AM and 8:17 PM." : "Nothing here right now. Jobs from LinkedIn and Naukri alerts, Dribbble and Jooble appear here when only a preview was available."}</div>`;
+    return;
+  }
+  list.innerHTML = items.map(j => {
+    const n = j.rank ?? 0;
+    return `<button class="row" data-id="${esc(j.id)}" aria-current="${selected === j.id}">
+      <div class="score ${scoreClass(n)}" aria-label="Match ${n}">${n}</div>
+      <div><h3>${esc(j.title)}</h3><div class="co">${esc(j.company)}</div><div class="tags">${rowTags(j)}</div></div></button>`;
+  }).join("") + `<div class="list-foot">${items.length} jobs · press <kbd>?</kbd> for shortcuts</div>`;
+  list.querySelectorAll(".row").forEach(r => r.onclick = () => select(r.dataset.id));
+}
+function select(id){
+  selected = id; $("#app").classList.add("show-detail");
+  $("#list").querySelectorAll(".row").forEach(r => r.setAttribute("aria-current", r.dataset.id === id));
+  const el = $(`#list .row[data-id="${CSS.escape(id)}"]`); if (el) el.scrollIntoView({ block: "nearest" });
+  renderDetail(); $("#detail").scrollTop = 0;
+}
+function move(delta){
+  const items = visible(); if (!items.length) return;
+  const i = items.findIndex(j => j.id === selected);
+  const next = items[Math.max(0, Math.min(items.length - 1, i < 0 ? 0 : i + delta))];
+  if (next) select(next.id);
+}
+
+// ------------------------------------------------------------ actions
+async function getPack(j){
+  if (!j.pack) return null;
+  if (packCache[j.id]) return packCache[j.id];
+  if (DEMO) return (packCache[j.id] = (window.JOBPILOT_DEMO.packs || {})[j.id] || null);
+  const r = await gh(`/contents/${j.pack.json}?${ref()}`, { raw: true });
+  return (packCache[j.id] = await r.json());
+}
+async function pdfBlob(j){
+  const r = await gh(`/contents/${j.pack.file}?${ref()}`, { raw: true });
+  return r.blob();
+}
+async function downloadPdf(j){
+  if (DEMO) { toast("Connect your repo to download resumes."); return; }
+  const blob = await pdfBlob(j);
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = j.pack.file.split("/").pop();
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+  markStep(j.id, 1);
+}
+async function previewPdf(j){
+  if (DEMO) { toast("Connect your repo to preview resumes."); return; }
+  const w = window.open("", "_blank");
+  const blob = await pdfBlob(j);
+  const url = URL.createObjectURL(new Blob([blob], { type: "application/pdf" }));
+  if (w) w.location = url; else window.location = url;
+}
+const doneSteps = store.get("steps", {});
+function markStep(id, n){ doneSteps[id] = [...new Set([...(doneSteps[id] || []), n])]; store.set("steps", doneSteps);
+  const el = document.querySelector(`.step[data-step="${n}"]`); if (el && selected === id) el.classList.add("done"); }
+
+async function setStatus(j, s, { advance = false, quiet = false } = {}){
+  const prev = status[j.id];
+  const note = ($("#note") && selected === j.id) ? $("#note").value : (prev || {}).note || "";
+  const now = new Date().toISOString();
+  const applied_at = (prev || {}).applied_at || (["applied","interview","offer","rejected"].includes(s) ? now : undefined);
+  status[j.id] = { status: s, updated_at: now, note, title: `${j.title} @ ${j.company}`, ...(applied_at && s !== "new" && s !== "skipped" ? { applied_at } : {}) };
+  const nextId = advance ? (() => { const items = visible(); const i = items.findIndex(x => x.id === j.id); return (items[i + 1] || items[i - 1] || {}).id; })() : null;
+  if (advance) { selected = nextId || null; }
+  render();
+  if (DEMO) { if (!quiet) toast(`${LABEL[s]} (snapshot — not saved)`); return; }
+  try {
+    await writeFile("data/status.json", async () => {
+      const remote = await readJson("data/status.json", {});
+      remote[j.id] = status[j.id]; status = { ...remote, ...status }; return JSON.stringify(remote, null, 1);
+    }, `status: ${s} — ${j.title} @ ${j.company}`.slice(0, 120));
+    if (!quiet) toast(s === "new" ? "Moved back to review" : `Saved: ${LABEL[s]}`);
+  } catch (e) { status[j.id] = prev; render(); toast(e.message); }
+}
+
+// scan / pack progress: poll until jobs.json changes
+let watching = null;
+function watchForUpdate(label, onDone){
+  if (DEMO) return;
+  const startAt = updatedAt, t0 = Date.now();
+  $("#running").classList.add("on"); $("#runningText").textContent = label;
+  clearInterval(watching);
+  watching = setInterval(async () => {
+    try {
+      const j = await readJson("data/jobs.json", null);
+      if (j && j.updated_at !== startAt) {
+        clearInterval(watching); $("#running").classList.remove("on");
+        await load(true); toast("Updated with the latest results"); onDone && onDone();
+      } else if (Date.now() - t0 > 12 * 60e3) {
+        clearInterval(watching); $("#running").classList.remove("on"); toast("Still running — check back in a few minutes.");
+      }
+    } catch {}
+  }, 30000);
+}
+async function requestPack(payload){
+  if (DEMO) { toast("Connect your repo to create packs."); return; }
+  await writeFile(`data/requests/${Date.now()}.json`, JSON.stringify(payload, null, 1), `request pack: ${payload.title || payload.job_id}`.slice(0, 120));
+  await dispatch("requests");
+  toast("Working on it — the pack appears in about 2 minutes.");
+  watchForUpdate("Making your pack…");
+}
+
+// ------------------------------------------------------------ detail
+function copyBtn(target, label = "Copy"){ return `<button class="btn small" data-copy-from="${target}">${label}</button>`; }
+async function copyText(text, btn){
+  try { await navigator.clipboard.writeText(text); if (btn) { const o = btn.textContent; btn.textContent = "Copied"; setTimeout(() => btn.textContent = o, 1400); } }
+  catch { toast("Couldn't copy — select the text instead."); }
+}
+const drafts = store.get("drafts", {});
+function draft(id, key, fallback){ return ((drafts[id] || {})[key]) ?? fallback ?? ""; }
+function saveDraft(id, key, val){ drafts[id] = { ...(drafts[id] || {}), [key]: val }; store.set("drafts", drafts); }
+
+async function renderDetail(){
+  const d = $("#detail");
+  if (tab === "applied") { d.innerHTML = trackerView(); wireTracker(); return; }
+  if (tab === "insights") { d.innerHTML = insightsView(); wireInsights(); return; }
+  if (tab === "health") { d.innerHTML = healthView(); return; }
+  const j = jobs.find(x => x.id === selected);
+  if (!j) {
+    const n = visible().length;
+    d.innerHTML = `<div class="empty"><h2>${n ? "Pick a job to start" : "All caught up"}</h2>
+      ${n ? `Start with the top match: each one has a step-by-step apply kit — your tailored resume, the job link, and ready-to-paste answers. Press <kbd>J</kbd> to open the first job.` : "New matches arrive twice a day. You can also tailor any job you find yourself."}</div>`;
+    return;
+  }
+  const ai = j.ai || {}, n = j.rank ?? 0, s = st(j.id), apply = safeUrl(j.apply_url) || safeUrl(j.url);
+  const also = (j.also_on || []).filter(a => safeUrl(a.url)).slice(0, 5).map(a => `<a href="${esc(a.url)}" target="_blank" rel="noopener">${esc(a.source)}</a>`).join(", ");
+  const done = new Set(doneSteps[j.id] || []);
+  const warn = [...(j.scam_flags || []).map(x => `<li><b>${esc(x)}</b></li>`), ...(j.flags || []).map(x => `<li>${esc(x)}</li>`)].join("");
+  d.innerHTML = `<div class="inner">
+    <button class="btn small back" id="back">← All jobs</button>
+    <h1>${esc(j.title)}</h1>
+    <div class="meta">${esc(j.company)} · ${esc(j.location || "location not stated")}${j.salary ? ` · ${esc(j.salary)}` : ""}</div>
+    <div class="meta small">${esc(j.attribution || j.source)}${also ? ` · also on ${also}` : ""}${j.posted_at ? ` · posted ${days(j.posted_at)}d ago` : ""}${s !== "new" ? ` · <b>${esc(LABEL[s])}</b>` : ""}</div>
+
+    <div class="verdict">
+      <div class="ring" style="--p:${Math.max(0, Math.min(100, n))}"><span>${n}</span></div>
+      <div><p><b>${esc(ai.verdict || (j.needs_jd ? "Paste the description below for a real match score." : "Keyword match only."))}</b></p>
+      <div class="meta" style="font-size:14px">${ai.score != null ? `AI fit ${ai.score}/100` : `Keyword fit ${j.kw_score ?? "–"}`}${ai.years_required ? ` · asks for ${esc(ai.years_required)}+ years` : ""}${ai.seniority_fit === "under" ? " · may need more experience than you have" : ai.seniority_fit === "over" ? " · you may be over-qualified" : ""}</div></div>
+    </div>
+
+    ${warn ? `<div class="box warnbox"><h2>Check before applying</h2><ul>${warn}</ul></div>` : ""}
+
+    ${j.needs_jd ? `<div class="kit"><div class="kit-head"><h2>Get a tailored resume for this job</h2></div>
+      <div class="step"><div class="num">1</div><div><h3>Open the job and copy its description</h3>
+        <div class="actions">${apply ? `<a class="btn" href="${esc(apply)}" target="_blank" rel="noopener">Open job</a>` : ""}</div></div></div>
+      <div class="step"><div class="num">2</div><div><h3>Paste it here</h3>
+        <textarea id="jdIn" class="tall" placeholder="Paste the full job description"></textarea>
+        <div class="actions" style="margin-top:8px"><button class="btn primary" id="jdGo">Create application pack</button></div></div></div></div>`
+    : `<div class="kit" id="kit"><div class="kit-head"><h2>Apply kit</h2><span class="meta" style="font-size:13px">${j.pack ? "Everything for this application, in order" : "No pack yet"}</span></div>
+      ${j.pack ? `
+      <div class="step ${done.has(1) ? "done" : ""}" data-step="1"><div class="num">1</div><div><h3>Get your tailored resume</h3>
+        <div class="actions"><button class="btn primary" id="dl">Download PDF</button><button class="btn" id="pv">Preview</button></div></div></div>
+      <div class="step ${done.has(2) ? "done" : ""}" data-step="2"><div class="num">2</div><div><h3>Open the application</h3>
+        <div class="actions">${apply ? `<a class="btn primary" id="openJob" href="${esc(apply)}" target="_blank" rel="noopener">Open job</a>` : `<span class="meta">No link provided.</span>`}</div></div></div>
+      <div class="step ${done.has(3) ? "done" : ""}" data-step="3"><div class="num">3</div><div><h3>Paste your answers</h3>
+        <div class="meta" style="font-size:13px">Edit anything before copying — your edits are kept in this browser.</div>
+        <div id="answers"><p class="meta">Loading…</p></div></div></div>
+      <div class="step" data-step="4"><div class="num">4</div><div><h3>Mark it done</h3>
+        <div class="actions"><button class="btn primary" data-status="applied" data-advance="1">Applied — next job</button>
+        <button class="btn" data-status="skipped" data-advance="1">Not for me</button></div></div></div>`
+      : `<div class="step"><div class="num">1</div><div><h3>Create the pack</h3><p class="meta" style="margin:0 0 8px">Packs are made automatically for the top matches. You can make one for this job now.</p>
+        <div class="actions"><button class="btn primary" id="mk">Create application pack</button>${apply ? `<a class="btn" href="${esc(apply)}" target="_blank" rel="noopener">Open job</a>` : ""}</div></div></div>`}
+    </div>`}
+
+    <div class="cols">
+      <div class="box"><h2>Why it fits</h2><ul>${(ai.reasons && ai.reasons.length ? ai.reasons : (j.kw_matched || []).slice(0, 6).map(k => `Mentions ${k}`)).map(x => `<li>${esc(x)}</li>`).join("") || "<li>No details yet</li>"}</ul></div>
+      <div class="box"><h2>Gaps to address</h2><ul>${(ai.gaps && ai.gaps.length ? ai.gaps : (j.kw_missing || []).slice(0, 6).map(k => `Asks for ${k}`)).map(x => `<li>${esc(x)}</li>`).join("") || "<li>None spotted</li>"}</ul></div>
+    </div>
+
+    <div class="box"><h2>Status and notes</h2>
+      <div class="actions" style="display:flex;flex-wrap:wrap;gap:6px">${STATUSES.map(([k, l]) => `<button class="btn small" data-status="${k}" aria-pressed="${s===k}" ${s===k ? 'style="background:var(--ink);color:var(--bg);border-color:var(--ink)"' : ""}>${l}</button>`).join("")}
+      ${s !== "new" ? `<button class="btn small ghost" data-status="new">Back to review</button>` : ""}</div>
+      <label class="f" for="note">Notes</label><textarea id="note" placeholder="Recruiter name, referral, interview dates…">${esc((status[j.id] || {}).note || "")}</textarea>
+      <div style="margin-top:8px"><button class="btn small" id="saveNote">Save note</button></div>
+      ${followUp(j) ? `<p class="meta">Applied ${days(appliedAt(j.id))} days ago with no update — a short follow-up to the recruiter often helps.</p>` : ""}
+    </div>
+
+    ${j.description ? `<details class="box"><summary>Job description</summary><div class="jd" style="margin-top:10px">${esc(j.description)}</div></details>` : ""}
+  </div>`;
+
+  $("#back").onclick = () => $("#app").classList.remove("show-detail");
+  d.querySelectorAll("[data-status]").forEach(b => b.onclick = () => setStatus(j, b.dataset.status, { advance: !!b.dataset.advance }));
+  $("#saveNote").onclick = () => setStatus(j, st(j.id));
+  if ($("#dl")) $("#dl").onclick = () => downloadPdf(j).catch(e => toast(e.message));
+  if ($("#pv")) $("#pv").onclick = () => previewPdf(j).catch(e => toast(e.message));
+  if ($("#openJob")) $("#openJob").addEventListener("click", () => markStep(j.id, 2));
+  if ($("#mk")) $("#mk").onclick = () => requestPack({ job_id: j.id, title: j.title, company: j.company, url: j.url, description: j.description }).catch(e => toast(e.message));
+  if ($("#jdGo")) $("#jdGo").onclick = () => {
+    const desc = $("#jdIn").value.trim();
+    if (desc.length < 80) { toast("That looks too short — paste the full description."); return; }
+    requestPack({ job_id: j.id, title: j.title, company: j.company, url: j.url, description: desc }).catch(e => toast(e.message));
+  };
+  if (j.pack) renderAnswers(j);
+}
+
+async function renderAnswers(j){
+  let p;
+  try { p = await getPack(j); } catch (e) { $("#answers").innerHTML = `<p>${esc(e.message)}</p>`; return; }
+  if (selected !== j.id || !$("#answers")) return;
+  if (!p) { $("#answers").innerHTML = `<p class="meta">Pack not found.</p>`; return; }
+  const a = p.answers || {};
+  const fields = [
+    ["cover", "Cover note", p.cover_note, true],
+    ["short", "Short message for recruiters", p.short_note],
+    ["why_company", "Why this company?", a.why_company],
+    ["why_role", "Why are you a good fit?", a.why_role],
+    ["notice", "Notice period", a.notice_period],
+    ["ectc", "Expected CTC", a.expected_ctc],
+    ["cctc", "Current CTC", a.current_ctc],
+    ["years", "Years of experience", a.years_experience],
+    ["auth", "Work authorization", a.work_authorization],
+    ["portfolio", "Portfolio", a.portfolio],
+    ["linkedin", "LinkedIn", a.linkedin],
+  ].filter(f => f[2]);
+  $("#answers").innerHTML = fields.map(([k, label, val, tall]) => {
+    const v = draft(j.id, k, val), short = String(v).length < 80 && !tall;
+    return `<div class="field"><div class="field-head"><b>${esc(label)}</b>${copyBtn(k)}</div>
+      ${short ? `<input class="field-in" data-k="${k}" value="${esc(v)}">` : `<textarea data-k="${k}" class="${tall ? "tall" : ""}">${esc(v)}</textarea>`}</div>`;
+  }).join("") + `<div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn small" id="copyAll">Copy all answers</button>
+    <span class="meta" style="font-size:13px;align-self:center">Resume covers ${p.ats.covered_after} of ${p.ats.jd_terms} skills this job mentions${p.keywords_missing && p.keywords_missing.length ? ` · not on your resume: ${p.keywords_missing.slice(0, 5).map(esc).join(", ")}` : ""}</span></div>`;
+  const box = $("#answers");
+  box.querySelectorAll("[data-k]").forEach(el => el.addEventListener("input", () => saveDraft(j.id, el.dataset.k, el.value)));
+  box.querySelectorAll("[data-copy-from]").forEach(b => b.onclick = () => {
+    copyText(box.querySelector(`[data-k="${b.dataset.copyFrom}"]`).value, b); markStep(j.id, 3);
+  });
+  $("#copyAll").onclick = e => {
+    const text = fields.map(([k, label]) => `${label}\n${box.querySelector(`[data-k="${k}"]`).value}`).join("\n\n");
+    copyText(text, e.currentTarget); markStep(j.id, 3);
+  };
+}
+
+// ------------------------------------------------------------ tracker
+function trackerView(){
+  const rows = jobs.filter(j => inTab(j, "applied")).sort((a, b) => (appliedAt(b.id) || "").localeCompare(appliedAt(a.id) || ""));
+  const back = `<button class="btn small back" id="backTabs">← Jobs</button>`;
+  if (!rows.length) return `<div class="inner">${back}<h1>Tracker</h1><div class="empty" style="padding-left:0">Jobs you mark as Applied show up here, with interview and offer tracking and a follow-up reminder after 7 days.</div></div>`;
+  const opts = s => [["applied","Applied"],["interview","Interview"],["offer","Offer"],["rejected","Rejected"]].map(([k, l]) => `<option value="${k}" ${s===k ? "selected" : ""}>${l}</option>`).join("");
+  return `<div class="inner">${back}<h1>Tracker</h1><p class="meta">${rows.length} applications. Change the status as you hear back.</p>
+    <div class="box" style="padding:6px 10px;overflow-x:auto"><table class="t"><thead><tr><th>Job</th><th>Status</th><th class="num">Applied</th><th>Next step</th><th class="hide-m">Notes</th></tr></thead><tbody>
+    ${rows.map(j => { const s = st(j.id), d0 = days(appliedAt(j.id));
+      const next = s === "applied" ? (d0 >= 7 ? `<span class="tag warn">Follow up</span>` : `<span class="meta">Wait ${7 - (d0 || 0)}d</span>`) : s === "interview" ? `<span class="tag pack">Prepare</span>` : s === "offer" ? `<span class="tag good">Negotiate</span>` : `<span class="meta">—</span>`;
+      return `<tr><td><button class="linkish" data-open="${esc(j.id)}">${esc(j.title)}</button><div class="meta" style="font-size:13px">${esc(j.company)}</div></td>
+      <td><select data-st="${esc(j.id)}" aria-label="Status for ${esc(j.title)}">${opts(s)}</select></td>
+      <td class="num">${d0 == null ? "–" : d0 === 0 ? "today" : `${d0}d ago`}</td><td>${next}</td>
+      <td class="hide-m meta" style="font-size:13px;max-width:240px">${esc(((status[j.id] || {}).note || "").slice(0, 120))}</td></tr>`; }).join("")}
+    </tbody></table></div></div>`;
+}
+function wireTracker(){
+  const b = $("#backTabs"); if (b) b.onclick = () => switchTab("queue");
+  document.querySelectorAll("[data-st]").forEach(sel => sel.onchange = () => { const j = jobs.find(x => x.id === sel.dataset.st); if (j) setStatus(j, sel.value); });
+  document.querySelectorAll("[data-open]").forEach(btn => btn.onclick = () => {
+    tab = "queue"; store.set("tab", "queue"); selected = btn.dataset.open; render(); $("#app").classList.add("show-detail"); window.scrollTo(0, 0); });
+}
+
+// ------------------------------------------------------------ insights
+function insightsView(){
+  const S = Object.entries(status).map(([id, s]) => ({ id, ...s }));
+  const appliedSet = S.filter(s => ["applied","interview","offer","rejected"].includes(s.status));
+  const interviews = S.filter(s => ["interview","offer"].includes(s.status)).length;
+  const offers = S.filter(s => s.status === "offer").length;
+  const rate = appliedSet.length ? Math.round(100 * interviews / appliedSet.length) : 0;
+  const scores = appliedSet.map(s => (jobs.find(j => j.id === s.id) || {}).rank).filter(x => x != null);
+  const avg = scores.length ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : null;
+
+  // weekly applications, last 8 weeks (week starts Monday)
+  const monday = d => { const x = new Date(d); x.setHours(0, 0, 0, 0); x.setDate(x.getDate() - ((x.getDay() + 6) % 7)); return x; };
+  const thisMon = monday(new Date());
+  const weeks = [...Array(8)].map((_, i) => { const w = new Date(thisMon); w.setDate(w.getDate() - 7 * (7 - i)); return { start: w, n: 0 }; });
+  appliedSet.forEach(s => { const t = monday(s.applied_at || s.updated_at).getTime(); const w = weeks.find(w => w.start.getTime() === t); if (w) w.n++; });
+  const max = Math.max(1, ...weeks.map(w => w.n));
+  const peak = weeks.reduce((a, w, i) => w.n > weeks[a].n ? i : a, 0);
+  const fmt = d => d.toLocaleDateString([], { day: "numeric", month: "short" });
+
+  // funnel
+  const found = jobs.length, packs = jobs.filter(j => j.pack).length;
+  const funnel = [["Matches found", found], ["Packs made", packs], ["Applied", appliedSet.length], ["Interviews", interviews], ["Offers", offers]];
+  const fmax = Math.max(1, found);
+
+  // by source
+  const srcName = j => (j.attribution || j.source || "").replace(/^Listed on (.*?) \(.*$/, "$1").replace(/^Found on (.*?) \(.*$/, "$1").replace(/^Found via (.*?) \(.*$/, "$1").replace(/^From your (\w+) job alert.*$/, "$1 alerts").replace(/ careers \(.*\)$/, " careers").slice(0, 40);
+  const by = {};
+  jobs.forEach(j => { const k = srcName(j) || j.source; const b = by[k] = by[k] || { found: 0, applied: 0, iv: 0, score: 0, sn: 0 };
+    b.found++; if (j.rank != null) { b.score += j.rank; b.sn++; }
+    const s = st(j.id); if (["applied","interview","offer","rejected"].includes(s)) b.applied++; if (["interview","offer"].includes(s)) b.iv++; });
+  const srcRows = Object.entries(by).sort((a, b) => b[1].applied - a[1].applied || b[1].found - a[1].found).slice(0, 15);
+
+  return `<div class="inner"><button class="btn small back" id="backTabs">← Jobs</button>
+    <h1>Insights</h1><p class="meta">How your search is going. Response rate counts interviews and offers out of everything you applied to.</p>
+    <div class="kpis">
+      <div class="kpi"><b>${appliedSet.length}</b><span>Applied in total</span></div>
+      <div class="kpi"><b>${appliedSet.filter(s => new Date(s.applied_at || s.updated_at) > Date.now() - 7 * 864e5).length}</b><span>Applied in the last 7 days</span></div>
+      <div class="kpi"><b>${appliedSet.length ? rate + "%" : "–"}</b><span>Response rate</span></div>
+      <div class="kpi"><b>${interviews}</b><span>Interviews</span></div>
+      <div class="kpi"><b>${offers}</b><span>Offers</span></div>
+      <div class="kpi"><b>${avg ?? "–"}</b><span>Avg match of jobs you applied to</span></div>
+    </div>
+
+    <div class="box"><h2>Applications per week</h2>
+      <div class="chart" id="weekChart">
+        <div class="bars" role="img" aria-label="Applications per week for the last 8 weeks">
+          ${weeks.map((w, i) => `<div class="bar-col" tabindex="0" data-tip="Week of ${fmt(w.start)}: ${w.n} application${w.n === 1 ? "" : "s"}">
+            ${i === peak && w.n ? `<span class="val" style="bottom:calc(${100 * w.n / max}% + 4px)">${w.n}</span>` : ""}
+            <div class="bar" style="height:${100 * w.n / max}%"></div></div>`).join("")}
+        </div>
+        <div class="xlabels">${weeks.map((w, i) => `<span>${i === 7 ? "This week" : fmt(w.start)}</span>`).join("")}</div>
+        <div class="tip" id="tip"></div>
+      </div>
+      <details style="margin-top:10px"><summary class="meta" style="font-weight:500;font-size:13px">Show as table</summary>
+        <table class="t" style="margin-top:6px"><tr><th>Week of</th><th class="num">Applications</th></tr>${weeks.map(w => `<tr><td>${fmt(w.start)}</td><td class="num">${w.n}</td></tr>`).join("")}</table></details>
+    </div>
+
+    <div class="box"><h2>Pipeline</h2>
+      <div class="funnel">${funnel.map(([l, v]) => `<span>${l}</span><div class="track"><div class="fill" style="width:${v ? Math.max(1.5, 100 * v / fmax) : 0}%"></div></div><span class="n">${v}</span>`).join("")}</div>
+    </div>
+
+    <div class="box" style="overflow-x:auto"><h2>Where your matches come from</h2>
+      <table class="t"><thead><tr><th>Source</th><th class="num">Matches</th><th class="num">Avg match</th><th class="num">Applied</th><th class="num">Interviews</th></tr></thead><tbody>
+      ${srcRows.map(([k, b]) => `<tr><td>${esc(k)}</td><td class="num">${b.found}</td><td class="num">${b.sn ? Math.round(b.score / b.sn) : "–"}</td><td class="num">${b.applied}</td><td class="num">${b.iv}</td></tr>`).join("")}
+      </tbody></table>
+      <p class="meta" style="font-size:13px;margin-bottom:0">Once you've applied to a few jobs, this shows which sources actually lead to interviews.</p>
+    </div></div>`;
+}
+function wireInsights(){
+  const b = $("#backTabs"); if (b) b.onclick = () => switchTab("queue");
+  const chart = $("#weekChart"), tip = $("#tip"); if (!chart) return;
+  const show = col => { const r = col.getBoundingClientRect(), c = chart.getBoundingClientRect(); const bar = col.querySelector(".bar").getBoundingClientRect();
+    tip.textContent = col.dataset.tip; tip.style.left = `${r.left - c.left + r.width / 2}px`; tip.style.top = `${Math.min(bar.top, r.bottom - 10) - c.top - 6}px`; tip.classList.add("on"); };
+  chart.querySelectorAll(".bar-col").forEach(col => { col.addEventListener("mouseenter", () => show(col)); col.addEventListener("focus", () => show(col));
+    col.addEventListener("mouseleave", () => tip.classList.remove("on")); col.addEventListener("blur", () => tip.classList.remove("on")); });
+}
+
+// ------------------------------------------------------------ sources
+function healthView(){
+  const names = Object.keys(health).filter(k => !k.startsWith("_"));
+  const paused = health._disabled_boards || [];
+  const rows = names.map(n => { const h = health[n] || {};
+    const tone = h.status === "ok" ? "good" : h.status === "error" ? "bad" : "";
+    const label = { ok: "Working", error: "Error", skipped: "Not set up", disabled: "Off" }[h.status] || "–";
+    return `<tr><td>${esc(n.replace(/_/g, " "))}</td><td><span class="tag ${tone}">${label}</span></td><td class="num">${h.count ?? "–"}</td>
+      <td class="num">${h.last_fetch ? esc(new Date(h.last_fetch).toLocaleString([], { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" })) : "–"}</td><td class="meta hide-m" style="font-size:13px">${esc(h.error || (h.board_errors || []).slice(0, 2).join("; "))}</td></tr>`; }).join("");
+  const r = runs.slice(0, 10).map(x => `<tr><td>${esc(new Date(x.at).toLocaleString([], { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" }))}</td><td class="num">${x.fetched}</td><td class="num">${x.new_matches}</td><td class="num">${x.packs}</td><td class="num">${x.ai_calls}</td></tr>`).join("");
+  return `<div class="inner"><button class="btn small back" id="backTabs">← Jobs</button><h1>Sources</h1><p class="meta">Where jobs come from and whether each source answered on the last scan.</p>
+    <div class="box" style="overflow-x:auto"><table class="t"><thead><tr><th>Source</th><th>Status</th><th class="num">Jobs</th><th class="num">Last checked</th><th class="hide-m">Notes</th></tr></thead><tbody>${rows || "<tr><td colspan=5>No scans yet.</td></tr>"}</tbody></table>
+    ${paused.length ? `<p class="meta" style="font-size:13px">Paused after 3 failures: ${paused.map(esc).join(", ")}.</p>` : ""}</div>
+    <div class="box" style="overflow-x:auto"><h2>Recent scans</h2><table class="t"><thead><tr><th>When</th><th class="num">Scanned</th><th class="num">New matches</th><th class="num">Packs</th><th class="num">AI calls</th></tr></thead><tbody>${r || "<tr><td colspan=5>No scans yet.</td></tr>"}</tbody></table></div></div>`;
+}
+
+// ------------------------------------------------------------ render + wiring
+function render(){
+  $("#app").classList.toggle("wide", WIDE.has(tab));
+  renderStats(); renderTabs(); renderFilters(); renderList(); renderDetail();
+  if (WIDE.has(tab)) { const b = $("#backTabs"); if (b) b.onclick = () => switchTab("queue"); }
+}
+// tabs for wide views live in the list column; give wide views their own tab strip on top
+$("#q").addEventListener("input", e => { query = e.target.value; renderList(); });
+$("#sort").onchange = e => { sort = e.target.value; store.set("sort", sort); renderList(); };
+$("#btnSettings").onclick = () => {
+  if (cfg) { $("#sOwner").value = cfg.owner; $("#sRepo").value = cfg.repo; $("#sBranch").value = cfg.branch || "main"; $("#sToken").value = cfg.token; }
+  $("#dlgSettings").showModal();
+};
+$("#dlgSettings").addEventListener("close", () => {
+  const v = $("#dlgSettings").returnValue;
+  if (v === "forget") { store.del("cfg"); location.reload(); }
+  if (v !== "save") return;
+  cfg = { owner: $("#sOwner").value.trim(), repo: $("#sRepo").value.trim(), branch: $("#sBranch").value.trim() || "main", token: $("#sToken").value.trim() };
+  store.set("cfg", cfg); location.reload();
+});
+$("#btnAdd").onclick = () => $("#dlgAdd").showModal();
+$("#dlgAdd").addEventListener("close", () => {
+  if ($("#dlgAdd").returnValue !== "go") return;
+  requestPack({ title: $("#aTitle").value.trim(), company: $("#aCompany").value.trim(), url: $("#aUrl").value.trim(), description: $("#aJd").value.trim() })
+    .then(() => $("#formAdd").reset()).catch(e => toast(e.message));
+});
+$("#btnRun").onclick = async () => {
+  if (!cfg) { toast("Connect first (gear icon)."); return; }
+  try { await dispatch("full"); toast("Scan started — about 5 minutes. This page updates by itself."); watchForUpdate("Scan running…"); }
+  catch (e) { toast(e.message); }
+};
+$("#btnKeys").onclick = () => $("#dlgKeys").showModal();
+document.addEventListener("keydown", e => {
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName) || document.querySelector("dialog[open]");
+  if (typing) { if (e.key === "Escape" && document.activeElement.blur) document.activeElement.blur(); return; }
+  const j = jobs.find(x => x.id === selected);
+  const k = e.key.toLowerCase();
+  if (k === "j") { e.preventDefault(); move(1); }
+  else if (k === "k") { e.preventDefault(); move(-1); }
+  else if (k === "/") { e.preventDefault(); $("#q").focus(); }
+  else if (k === "?") { $("#dlgKeys").showModal(); }
+  else if (/^[1-5]$/.test(k)) { switchTab(TABS[+k - 1][0]); }
+  else if (j && k === "o") { const u = safeUrl(j.apply_url) || safeUrl(j.url); if (u) { window.open(u, "_blank", "noopener"); markStep(j.id, 2); } }
+  else if (j && k === "d" && j.pack) { downloadPdf(j).catch(err => toast(err.message)); }
+  else if (j && k === "a") { setStatus(j, "applied", { advance: true }); }
+  else if (j && k === "x") { setStatus(j, "skipped", { advance: true }); }
+});
+// wide views (tracker, insights, sources) hide the list column, so show a tab strip in the header area
+const wideNav = document.createElement("nav");
+wideNav.className = "tabs"; wideNav.id = "wideTabs"; wideNav.setAttribute("role", "tablist");
+wideNav.style.cssText = "position:sticky;top:0;z-index:2";
+$("#app").before(wideNav);
+const _renderTabs = renderTabs;
+renderTabs = function(){ _renderTabs(); wideNav.innerHTML = $("#tabs").innerHTML; wideNav.style.display = WIDE.has(tab) ? "flex" : "none";
+  wideNav.querySelectorAll(".tab").forEach(b => b.onclick = () => switchTab(b.dataset.tab)); };
+load();
+})();
+</script>
+</body>
+</html>
