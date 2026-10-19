@@ -76,7 +76,7 @@ header.top{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:2
 .listcol{display:flex;flex-direction:column;border-right:1px solid var(--line);min-height:0;background:var(--panel)}
 nav.tabs{display:flex;gap:2px;padding:8px 10px 0;overflow-x:auto;border-bottom:1px solid var(--line);background:var(--panel)}
 .app.wide nav.tabs{display:none}
-.tab{border:0;background:none;padding:9px 10px;border-bottom:2px solid transparent;cursor:pointer;color:var(--muted);font-weight:500;white-space:nowrap}
+.tab{border:0;background:none;padding:9px 8px;border-bottom:2px solid transparent;cursor:pointer;color:var(--muted);font-weight:500;white-space:nowrap}
 .tab[aria-selected="true"]{color:var(--ink);border-color:var(--cobalt)}
 .tab .n{font-size:12px;margin-left:5px;padding:1px 6px;border-radius:999px;background:var(--panel-2);color:var(--muted)}
 .filters{display:flex;flex-wrap:wrap;gap:6px;padding:10px 12px;border-bottom:1px solid var(--line)}
@@ -356,7 +356,7 @@ const packCache = {};
 const STATUSES = [["applied","Applied"],["interview","Interview"],["offer","Offer"],["rejected","Rejected"],["skipped","Not for me"]];
 const LABEL = Object.fromEntries([["new","To review"], ...STATUSES]);
 const BUCKETS = [["all","All"],["pack","Pack ready"],["remote_india","Remote India"],["remote_global","Remote global"],["onsite_mumbai","Mumbai office"],["onsite_international","Abroad"]];
-const TABS = [["queue","To review"],["alerts","Needs description"],["applied","Tracker"],["insights","Insights"],["health","Sources"]];
+const TABS = [["queue","To review"],["alerts","Needs JD"],["applied","Tracker"],["insights","Insights"],["health","Sources"]];
 const WIDE = new Set(["applied","insights","health"]);
 const st = id => (status[id] || {}).status || "new";
 const days = iso => iso ? Math.floor((Date.now() - new Date(iso)) / 864e5) : null;
@@ -561,6 +561,12 @@ async function renderDetail(){
   if (tab === "insights") { d.innerHTML = insightsView(); wireInsights(); return; }
   if (tab === "health") { d.innerHTML = healthView(); return; }
   const j = jobs.find(x => x.id === selected);
+  if (!cfg && !DEMO) {
+    d.innerHTML = `<div class="empty"><h2>Connect your JobPilot repo</h2>Click the gear icon at the top right and enter your GitHub username (pratik-kathe), the repository (jobpilot) and your token. It's saved only in this browser, so do it once on each device.
+      <div style="margin-top:14px"><button class="btn primary" id="connectNow">Connect</button></div></div>`;
+    $("#connectNow").onclick = () => $("#btnSettings").click();
+    return;
+  }
   if (!j) {
     const n = visible().length;
     d.innerHTML = `<div class="empty"><h2>${n ? "Pick a job to start" : "All caught up"}</h2>
