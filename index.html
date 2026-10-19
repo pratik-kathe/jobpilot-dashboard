@@ -2,7 +2,17 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#09090b" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="JobPilot">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22%3E%3Cstyle%3E.b%7Bfill:%2318181b%7D.f%7Bstroke:%23fafafa%7D%40media %28prefers-color-scheme:dark%29%7B.b%7Bfill:%23fafafa%7D.f%7Bstroke:%2318181b%7D%7D%3C/style%3E%3Crect class=%22b%22 width=%2264%22 height=%2264%22 rx=%2214%22/%3E%3Cg class=%22f%22 fill=%22none%22 stroke-width=%224.5%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Crect x=%2213%22 y=%2222%22 width=%2238%22 height=%2227%22 rx=%224.5%22/%3E%3Cpath d=%22M25 22v-4.5a3.5 3.5 0 0 1 3.5-3.5h7a3.5 3.5 0 0 1 3.5 3.5V22%22/%3E%3Cpath d=%22M13 34.5h38%22/%3E%3C/g%3E%3C/svg%3E">
+<link rel="icon" type="image/png" sizes="32x32" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAADCklEQVR4nMyXX0hTURzHv3f3CvuLa+ju5hSS7WEqmb35kImgrsI/ZElPgUaEkA/Wc4iMHhPTMDAie4lA0MCyWogvKkQvCf5bYJovtVwMH/ZHg+32Ozev+GfF1c3ZB8bvnPs7O+d7/p+fgB2YCa1Wf1uSUE7ZMo7jrEgDkiStkZnhOHzY2Ij2rBOKj1MSubm2CxoN/4QK5eEIoc59SyTiN4LBwNttAVar3aPRaN4hg8Tj8YtMBJednX1CqzXOU8/tyCBsJGIx7hRvNlvaaK6vIMNQh02CkAgIlCzHscGVC6TkQALa22+hufkyCgsLd31fWvqC4eER9Pc/Ul0Xa5uz2RyS2j+whru77/+zTEfHHYyMvIRaBByA0tJS2fr9fni999hKlvM8z6Oz8y7cbjfKyk4fnQCDwSDbubl5TE1N7/Kxb0yA0WjEQfjrFDQ2NqC1tQVFRW7odDochlgshoWFRQwOPsPo6Cv1AlwuJyYmxpEuEokEqqqqsbKyss+XdArq6+tkGwwGaW67EAqFtn0Wi2VXfid7fSzv9XbRMZ+LhoY69PY+VCfA4XDIdnJyCmNjb5AKNTXVaGq6hIKCgqT+pALoXpAtG7pUUepQ6lQlIJMkFcDmjlFZeQ5DQy+QCk6nU7Y5OTlQLcBut8mWLR72SweiaFUvYHHRT/u/iPbwAny+90gFj6cWxcXFdHp+hmoBysJhh0hPTy9Sga1+JkA5tlUJyCT/p4BoNCrbdCxAURRlG4lEoFrA8vKfM5ttw76+B0nPcDW4XC5UVJyV0+zBkoykl5Fer8f4uA/5+flIB6urq6itPU+348Z+AaKYF6BHqbjXYTKZ0NZ2EyUlJSTocNcxm8rZ2XkMDDxGOBze56eA5QeNQB7FA5wHx4Lk09CWn8ExwdqmEbCdlCT+E71QzcggFJisc1z8jCYQCHyVpMR1ZByphbXNs2QkEvbrdIaPHKepYhELjpCt4PTq2tr31yzPK45oNLyUlcU/FYSsX1Rokz6ZaHcYkAa2wvNp6tzzzc3otVDo55zi+w0AAP//nhzjGQAAAAZJREFUAwBVyRBc/NA2vwAAAABJRU5ErkJggg==">
+<link rel="apple-touch-icon" sizes="180x180" href="data:image/png;base64,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">
+<link rel="manifest" href="manifest.webmanifest">
 <meta name="robots" content="noindex, nofollow">
 <title>JobPilot</title>
 <meta name="description" content="Private job-search workspace: matches, tailored resumes, tracker and insights.">
@@ -264,29 +274,107 @@ dialog .d-d{color:var(--muted-foreground);margin:6px 0 20px}
 
 /* ===== responsive ===== */
 @media (max-width:1100px){.kpis{grid-template-columns:repeat(2,1fr)}.review{grid-template-columns:330px 1fr}.grid2.wide{grid-template-columns:1fr}}
+.m-only{display:none!important}
+.btn.icon{width:36px;padding:0}
+.grid2>*,.kpis>*{min-width:0}
+.grid2.wide{grid-template-columns:minmax(0,3fr) minmax(0,2fr)}
+.scorecard>div{min-width:0}
 @media (max-width:860px){
-  .shell{grid-template-columns:1fr;height:auto;min-height:100vh}
-  aside.sidebar{position:sticky;top:0;z-index:5;flex-direction:row;align-items:center;border-right:0;border-bottom:1px solid var(--border);overflow-x:auto}
-  .brand{padding:10px 8px 10px 12px}.brand>div:not(.logo){display:none}
-  .nav-label,.side-foot .lbl{display:none}
-  nav.nav{flex-direction:row;padding:0 4px}
-  .nav-item{width:auto;padding:0 10px;white-space:nowrap}
-  .nav-item .count{margin-left:4px}
-  .side-foot{flex-direction:row;margin:0 0 0 auto;border:0;padding:0 8px}
-  .side-foot .nav-item{width:34px;padding:0;justify-content:center}
-  header.bar{padding:0 16px}.crumb,.hide-m{display:none}
-  .review{grid-template-columns:1fr;height:auto}
+  :root{--tabbar:calc(60px + env(safe-area-inset-bottom))}
+  .m-only{display:inline-flex!important}
+  .shell{display:block;height:auto;min-height:100vh;min-height:100dvh}
+  .main{min-height:100vh;min-height:100dvh;padding-bottom:var(--tabbar)}
+  /* sidebar becomes a bottom tab bar */
+  aside.sidebar{position:fixed;left:0;right:0;bottom:0;z-index:20;height:var(--tabbar);padding-bottom:env(safe-area-inset-bottom);
+    border-right:0;border-top:1px solid var(--border);background:color-mix(in srgb,var(--background) 92%,transparent);
+    -webkit-backdrop-filter:saturate(1.6) blur(12px);backdrop-filter:saturate(1.6) blur(12px)}
+  .brand,.nav-label,.side-foot{display:none}
+  nav.nav{flex-direction:row;padding:0 4px;height:60px;gap:0}
+  .nav-item{flex:1;min-width:0;flex-direction:column;justify-content:center;gap:3px;height:60px;padding:0 2px;border-radius:0;
+    font-size:11px;font-weight:500;color:var(--muted-foreground);position:relative;background:none!important;-webkit-tap-highlight-color:transparent}
+  .nav-item svg.i{width:22px;height:22px}
+  .nav-item>span:not(.count){overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
+  .nav-item[aria-current="page"]{color:var(--foreground);font-weight:600}
+  .nav-item[aria-current="page"]::before{content:"";position:absolute;top:0;left:28%;right:28%;height:2px;border-radius:0 0 2px 2px;background:var(--foreground)}
+  .nav-item .count{position:absolute;top:6px;left:calc(50% + 6px);margin:0;min-width:18px;height:18px;padding:0 5px;border-radius:9px;
+    background:var(--primary);color:var(--primary-foreground);font-size:10px;font-weight:600;line-height:18px;text-align:center}
+  .nav-item .count:empty,.nav-item .count[data-zero]{display:none}
+  /* compact sticky header */
+  header.bar{position:sticky;top:0;z-index:15;height:auto;min-height:52px;padding:8px 8px 8px 12px;padding-top:max(8px,env(safe-area-inset-top));gap:8px;
+    background:color-mix(in srgb,var(--background) 92%,transparent);-webkit-backdrop-filter:saturate(1.6) blur(12px);backdrop-filter:saturate(1.6) blur(12px)}
+  header.bar .logo{width:28px;height:28px;border-radius:7px}
+  header.bar .logo svg.i{width:16px;height:16px}
+  header.bar h1{font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .bar-actions{gap:2px}
+  .m-tools{gap:0}
+  .running #runningText{display:none}
+  .crumb,.hide-m{display:none!important}
+  #btnAdd{width:36px;padding:0;margin-left:4px}
+  #btnAdd .add-l{display:none}
+  .content{overflow:visible}
+  /* review list ⇄ detail */
+  .review{grid-template-columns:minmax(0,1fr);height:auto}
+  .listpane,.listtools,.detail{min-width:0}
+  .listpane{border-right:0}
+  .listtools{position:sticky;top:52px;z-index:10;background:var(--background)}
+  .chips{flex-wrap:nowrap;overflow-x:auto;margin:0 -12px;padding:0 12px 2px;scrollbar-width:none;scroll-padding-inline:12px}
+  .chips::-webkit-scrollbar{display:none}
+  .chip{flex:none;height:32px;scroll-snap-align:start}
+  .item{padding:14px 16px}
+  .item .t{font-size:15px}
   .review .detail{display:none}
   .review.show .listpane{display:none}
   .review.show .detail{display:block}
-  .back{display:inline-flex;margin-bottom:12px}
-  .dwrap,.page{padding:16px 16px 64px}
-  .grid2{grid-template-columns:1fr}
+  .back{display:inline-flex;margin:0 0 12px -10px}
+  .dwrap,.page{padding:16px 16px 32px}
+  .dhead h2{font-size:21px}
+  .dhead{flex-wrap:wrap}
+  .dmeta{gap:4px 12px;font-size:13px}
+  .scorecard{grid-template-columns:1fr;gap:12px}
+  .bigscore{font-size:34px}
+  .part{white-space:normal}
+  .grid2,.grid2.wide{grid-template-columns:1fr!important}
   .kpis{grid-template-columns:1fr 1fr;gap:10px}
-  .step{padding:16px}.card-h{padding:16px 16px 0}.card-c{padding:16px}.card-f{padding:0 16px 16px}
-  .content{overflow:visible}
-  .toasts{left:16px;right:16px}.toast{max-width:none}
+  .kpi .card-c{padding:14px}
+  .kpi .k-v{font-size:22px}
+  .kpi .k-l svg{display:none}
+  .step{padding:16px;grid-template-columns:24px 1fr;gap:12px}
+  .step .n{width:24px;height:24px;font-size:12px}
+  .step .row .btn{flex:1 1 140px}
+  .card-h{padding:16px 16px 0}.card-c{padding:16px}.card-f{padding:0 16px 16px}
+  details.card>summary{padding:14px 16px}.jd{padding:0 16px 16px;max-height:none}
+  .funnel{grid-template-columns:84px 1fr 36px;gap:12px 10px}
+  .xl span{font-size:10px}
+  /* tables turn into stacked rows */
+  .tbl thead{display:none}
+  .tbl,.tbl tbody,.tbl tr,.tbl td{display:block;width:100%}
+  .tbl tr{padding:12px 0;border-bottom:1px solid var(--border)}
+  .tbl tr:last-child{border-bottom:0}
+  .tbl td{border:0;padding:3px 0;display:flex;justify-content:space-between;align-items:center;gap:12px;text-align:right}
+  .tbl td::before{content:attr(data-label);color:var(--muted-foreground);font-size:13px;text-align:left;flex:none}
+  .tbl td:first-child{text-align:left;font-weight:500;padding-bottom:6px}
+  .tbl td:first-child::before{display:none}
+  .tbl td.num{text-align:right}
+  .tbl td:empty{display:none}
+  .tbl tbody tr:hover td{background:none}
+  .card[style*="overflow-x"]{overflow:visible!important}
+  /* inputs: 16px stops iOS from zooming in */
+  .input,.textarea,.select{font-size:16px}
+  .input,.select{height:40px}
+  dialog{width:100vw;max-width:100vw;max-height:92dvh;margin:auto 0 0;border-radius:16px 16px 0 0;padding:20px 16px calc(16px + env(safe-area-inset-bottom));border-bottom:0}
+  dialog .grid2{grid-template-columns:1fr!important}
+  .d-foot{position:sticky;bottom:0;background:var(--background);padding-top:8px}
+  .d-foot .btn{flex:1}
+  .toasts{left:12px;right:12px;bottom:calc(var(--tabbar) + 12px)}.toast{max-width:none;min-width:0}
+  .lock{padding:16px}
 }
+@media (max-width:380px){
+  .m-tools #mRun{display:none}
+  .kpis{grid-template-columns:1fr}
+  .nav-item{font-size:10px}
+}
+@media (hover:none) and (pointer:coarse){.callout{display:none}}
+@media (hover:none){.item:not([aria-current="true"]):hover{background:none}.btn.outline:hover{background:var(--background)}.chip:not([aria-pressed="true"]):hover{background:transparent}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -378,11 +466,18 @@ dialog .d-d{color:var(--muted-foreground);margin:6px 0 20px}
   </aside>
   <div class="main">
     <header class="bar">
+      <div class="logo m-only" aria-hidden="true"><svg class="i"><use href="#i-briefcase"/></svg></div>
       <h1 id="pageTitle">Review</h1><span class="crumb" id="crumb"></span>
       <div class="bar-actions">
         <span class="running" id="running" role="status"><span class="spinner"></span><span id="runningText">Scanning…</span></span>
         <button class="btn outline sm hide-m" id="btnRun"><svg class="i"><use href="#i-refresh"/></svg>Scan now</button>
-        <button class="btn sm" id="btnAdd"><svg class="i"><use href="#i-plus"/></svg>Tailor a job</button>
+        <span class="m-tools m-only">
+          <button class="btn ghost icon" id="mRun" title="Scan now" aria-label="Scan now"><svg class="i"><use href="#i-refresh"/></svg></button>
+          <button class="btn ghost icon" id="mTheme" title="Theme" aria-label="Change theme"></button>
+          <button class="btn ghost icon" id="mSettings" title="Settings" aria-label="Settings"><svg class="i"><use href="#i-settings"/></svg></button>
+          <button class="btn ghost icon" id="mLock" title="Lock" aria-label="Lock"><svg class="i"><use href="#i-lock"/></svg></button>
+        </span>
+        <button class="btn sm" id="btnAdd" aria-label="Tailor a job"><svg class="i"><use href="#i-plus"/></svg><span class="add-l">Tailor a job</span></button>
       </div>
     </header>
     <div class="content" id="content"></div>
@@ -464,8 +559,12 @@ function applyTheme(){
   if (theme === "light" || theme === "dark") document.documentElement.dataset.theme = theme; else delete document.documentElement.dataset.theme;
   $("#btnTheme").innerHTML = `${ic({ light: "sun", dark: "moon", system: "monitor" }[theme])}<span class="lbl">Theme: ${theme[0].toUpperCase() + theme.slice(1)}</span>`;
   $("#btnTheme").title = `Theme: ${theme}`;
+  const mt = document.getElementById("mTheme"); if (mt) { mt.innerHTML = ic({ light: "sun", dark: "moon", system: "monitor" }[theme]); mt.title = `Theme: ${theme}`; }
+  const tc = getComputedStyle(document.documentElement).getPropertyValue("--background").trim();
+  document.querySelectorAll('meta[name="theme-color"]').forEach(m => { if (theme !== "system") { m.content = tc; m.removeAttribute("media"); } });
 }
 applyTheme();
+["Run:btnRun", "Theme:btnTheme", "Settings:btnSettings", "Lock:btnLock"].forEach(x => { const [m, d] = x.split(":"); $("#m" + m).onclick = () => $("#" + d).click(); });
 $("#btnTheme").onclick = () => { theme = { system: "light", light: "dark", dark: "system" }[theme]; try { localStorage.setItem("jp:theme", theme); } catch {} applyTheme(); };
 
 /* ================= vault (password lock) ================= */
@@ -593,11 +692,18 @@ async function load(quiet){
 function renderNav(){
   $("#nav").innerHTML = VIEWS.map(([k, label, icon], i) => {
     const n = ["review","needs","tracker"].includes(k) ? jobs.filter(j => inView(j, k) && (k !== "review" || strong(j))).length : "";
-    return `<button class="nav-item" data-v="${k}" ${view === k ? 'aria-current="page"' : ""} title="${label} (${i + 1})">${ic(icon)}<span>${label}</span><span class="count">${n}</span></button>`;
+    return `<button class="nav-item" data-v="${k}" ${view === k ? 'aria-current="page"' : ""} title="${label} (${i + 1})">${ic(icon)}<span>${label}</span><span class="count"${n === 0 ? " data-zero" : ""}>${n}</span></button>`;
   }).join("");
   $("#nav").querySelectorAll(".nav-item").forEach(b => b.onclick = () => go(b.dataset.v));
   $("#pageTitle").textContent = (VIEWS.find(x => x[0] === view) || [, ""])[1];
   $("#crumb").textContent = view === "review" ? "Best matches first" : view === "needs" ? "Paste a description to get a tailored pack" : "";
+}
+// on phones each table row becomes a small card; the column name is shown next to each value
+function labelTables(){
+  document.querySelectorAll("#content table.tbl").forEach(t => {
+    const heads = [...t.querySelectorAll("thead th")].map(th => th.textContent.trim());
+    t.querySelectorAll("tbody tr").forEach(tr => [...tr.children].forEach((td, i) => { if (heads[i] && !td.hasAttribute("colspan")) td.dataset.label = heads[i]; }));
+  });
 }
 function go(v){ view = v; ls.set("view", v); selected = null; render(); $("#content").scrollTop = 0; }
 function render(){
@@ -606,6 +712,7 @@ function render(){
   else if (view === "tracker") { $("#content").innerHTML = trackerView(); wireTracker(); }
   else if (view === "insights") { $("#content").innerHTML = insightsView(); wireInsights(); }
   else $("#content").innerHTML = sourcesView();
+  labelTables();
 }
 
 /* ================= review ================= */
@@ -916,7 +1023,7 @@ function insightsView(){
   return `<div class="page"><div class="page-h"><h2>Insights</h2><p>How your search is going.</p></div>
     <div class="kpis">${kpi("Applications", A.length, `${last7} in the last 7 days`, "briefcase")}${kpi("Response rate", rate == null ? "—" : rate + "%", "Interviews and offers ÷ applications", "activity")}
       ${kpi("Interviews", iv, `${of} offer${of === 1 ? "" : "s"}`, "check")}${kpi("Avg. match applied", avg ?? "—", "Score of jobs you applied to", "chart")}</div>
-    <div class="grid2 wide" style="margin-top:16px;grid-template-columns:3fr 2fr">
+    <div class="grid2 wide" style="margin-top:16px">
       <div class="card"><div class="card-h"><h3 class="card-t">Applications per week</h3><p class="card-d">Last 8 weeks</p></div><div class="card-c">
         <div class="chart" id="wk"><div class="bars" role="img" aria-label="Applications per week">${W.map((w, i) => `<div class="bcol" tabindex="0" data-tip="Week of ${fmt(w.s)} · ${w.n} application${w.n === 1 ? "" : "s"}">
           ${i === peak && w.n ? `<span class="v" style="bottom:calc(${100 * w.n / max}% + 4px)">${w.n}</span>` : ""}<div class="bar" style="height:${100 * w.n / max}%"></div></div>`).join("")}</div>
