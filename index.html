@@ -377,6 +377,7 @@ dialog .d-d{color:var(--muted-foreground);margin:6px 0 20px}
 @media (hover:none) and (pointer:coarse){.callout{display:none}}
 @media (hover:none){.item:not([aria-current="true"]):hover{background:none}.btn.outline:hover{background:var(--background)}.chip:not([aria-pressed="true"]):hover{background:transparent}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+.mailbox{border:1px solid var(--border,#e4e4e7);border-radius:12px;padding:14px;margin-bottom:6px}.mailbox .ans-h span:first-child{display:flex;align-items:center;gap:6px}.mlab{display:block;font-size:12px;margin:10px 0 4px}
 </style>
 </head>
 <body>
@@ -927,6 +928,31 @@ async function copyText(text, btn){
   try { await navigator.clipboard.writeText(text); if (btn) { const o = btn.innerHTML; btn.innerHTML = `${ic("check")}Copied`; setTimeout(() => btn.innerHTML = o, 1400); } }
   catch { toast("Couldn't copy — select the text instead."); }
 }
+/* Recruiter email found in the job post (for jobs that say "send your resume to …") */
+function recruiterEmail(j){
+  const t = `${j.description || ""} ${j.apply_url || ""}`;
+  const badAddr = /^(no-?reply|donotreply|do-not-reply|privacy|support|help|info|abuse|unsubscribe|legal|security|dpo|gdpr)[@.+_-]|accommodat|accessib|disabilit|data\.?protection|@(example|email|domain)\.|\.(png|jpe?g|gif|svg|webp)$/;
+  const badCtx = /accommodat|disabilit|reasonable adjust|privacy|data protection|personal data|equal opportunit|\beeo\b|fraud|scam|phishing|unsolicited|agenc(y|ies)/;
+  const goodCtx = /resume|\bcv\b|portfolio|apply|application|send|share|email (us|your)|write to|reach out|interested/;
+  const found = [];
+  for (const m of t.matchAll(/(?:mailto:)?([A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,})/g)) {
+    const e = m[1].replace(/\.$/, "").toLowerCase(), ctx = t.slice(Math.max(0, m.index - 160), m.index).toLowerCase();
+    if (badAddr.test(e) || badCtx.test(ctx)) continue;
+    found.push({ e, score: (goodCtx.test(ctx) ? 2 : 0) + (/career|job|hr|hiring|recruit|talent|people|resume|cv/.test(e) ? 1 : 0) });
+  }
+  found.sort((x, y) => y.score - x.score);
+  return found.length && found[0].score > 0 ? found[0].e : "";
+}
+function emailDraft(j, p){
+  const r = p.resume || {}, a = p.answers || {}, name = r.name || "";
+  const subject = `Application: ${j.title}${name ? ` — ${name}` : ""}`;
+  const facts = [a.years_experience ? `Experience: ${a.years_experience} years` : "", a.notice_period ? `Notice period: ${a.notice_period}` : "",
+    a.portfolio && !(p.cover_note || "").includes(a.portfolio) ? `Portfolio: ${a.portfolio}` : "", a.linkedin ? `LinkedIn: ${a.linkedin}` : ""].filter(Boolean);
+  const body = `Hi,\n\nI came across the ${j.title} opening at ${j.company} and would like to apply.\n\n${(p.cover_note || "").trim()}\n\n`
+    + (facts.length ? facts.join("\n") + "\n\n" : "")
+    + `I've attached my resume. I'd be glad to walk you through my work whenever suits you.\n\nThanks,\n${name}${r.phone ? `\n${r.phone}` : ""}${r.email ? `\n${r.email}` : ""}`;
+  return { subject, body };
+}
 async function renderAnswers(j){
   let p; try { p = await getPack(j); } catch (e) { $("#answers").innerHTML = `<p>${esc(e.message)}</p>`; return; }
   const box = $("#answers"); if (selected !== j.id || !box) return;
@@ -936,13 +962,26 @@ async function renderAnswers(j){
     ["notice","Notice period",a.notice_period],["ectc","Expected CTC",a.expected_ctc],["cctc","Current CTC",a.current_ctc],["years","Years of experience",a.years_experience],
     ["auth","Work authorization",a.work_authorization],["portfolio","Portfolio",a.portfolio],["linkedin","LinkedIn",a.linkedin]].filter(f => f[2]);
   const dv = (k, v) => ((drafts[j.id] || {})[k]) ?? v;
-  box.innerHTML = F.map(([k, l, v, tall]) => { const val = dv(k, v), short = String(val).length < 80 && !tall;
+  const to = recruiterEmail(j), r = p.resume || {};
+  const mail = to ? emailDraft(j, p) : null;
+  const mailBox = to ? `<div class="ans mailbox"><div class="ans-h"><span>${ic("inbox")}Email the recruiter</span><span class="muted" style="font-size:12px">Attach your tailored resume PDF before sending</span></div>
+      <label class="muted mlab">To</label><input class="input" data-k="m_to" value="${esc(dv("m_to", to))}">
+      <label class="muted mlab">Subject</label><input class="input" data-k="m_sub" value="${esc(dv("m_sub", mail.subject))}">
+      <label class="muted mlab">Message</label><textarea class="textarea tall" data-k="m_body">${esc(dv("m_body", mail.body))}</textarea>
+      <div class="row" style="gap:8px;margin-top:10px;flex-wrap:wrap"><button class="btn sm" id="mGmail">${ic("ext")}Open in Gmail</button><button class="btn outline sm" id="mApp">${ic("inbox")}Open in mail app</button><button class="btn ghost sm" id="mCopy">${ic("copy")}Copy email</button></div></div>` : "";
+  box.innerHTML = mailBox + F.map(([k, l, v, tall]) => { const val = dv(k, v), short = String(val).length < 80 && !tall;
     return `<div class="ans"><div class="ans-h"><span>${esc(l)}</span><button class="btn ghost xs" data-cp="${k}">${ic("copy")}Copy</button></div>
       ${short ? `<input class="input" data-k="${k}" value="${esc(val)}">` : `<textarea class="textarea ${tall ? "tall" : ""}" data-k="${k}">${esc(val)}</textarea>`}</div>`; }).join("")
     + `<div class="row" style="align-items:center;gap:12px;margin-top:16px"><button class="btn outline sm" id="copyAll">${ic("copy")}Copy all answers</button>
       <span class="muted" style="font-size:13px">Resume covers ${p.ats.covered_after} of ${p.ats.jd_terms} skills this job mentions${p.keywords_missing && p.keywords_missing.length ? ` · missing: ${p.keywords_missing.slice(0, 4).map(esc).join(", ")}` : ""}</span></div>`;
   box.querySelectorAll("[data-k]").forEach(el => el.addEventListener("input", () => { drafts[j.id] = { ...(drafts[j.id] || {}), [el.dataset.k]: el.value }; ls.set("drafts", drafts); }));
   box.querySelectorAll("[data-cp]").forEach(b => b.onclick = () => { copyText(box.querySelector(`[data-k="${b.dataset.cp}"]`).value, b); markStep(j.id, 3); });
+  if (to) {
+    const v = k => box.querySelector(`[data-k="${k}"]`).value;
+    $("#mGmail").onclick = () => { window.open(`https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(v("m_to"))}&su=${encodeURIComponent(v("m_sub"))}&body=${encodeURIComponent(v("m_body"))}`, "_blank", "noopener"); markStep(j.id, 3); };
+    $("#mApp").onclick = () => { location.href = `mailto:${encodeURIComponent(v("m_to"))}?subject=${encodeURIComponent(v("m_sub"))}&body=${encodeURIComponent(v("m_body"))}`; markStep(j.id, 3); };
+    $("#mCopy").onclick = e => { copyText(`To: ${v("m_to")}\nSubject: ${v("m_sub")}\n\n${v("m_body")}`, e.currentTarget); markStep(j.id, 3); };
+  }
   $("#copyAll").onclick = e => { copyText(F.map(([k, l]) => `${l}\n${box.querySelector(`[data-k="${k}"]`).value}`).join("\n\n"), e.currentTarget); markStep(j.id, 3); };
 }
 
