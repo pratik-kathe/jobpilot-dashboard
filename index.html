@@ -94,6 +94,10 @@ svg.i{width:16px;height:16px;flex:none;stroke:currentColor;fill:none;stroke-widt
 .field{margin-bottom:16px}
 .badge{display:inline-flex;align-items:center;gap:4px;border:1px solid transparent;border-radius:calc(var(--radius) - 2px);padding:1px 8px;font-size:12px;font-weight:500;line-height:18px;white-space:nowrap}
 .badge svg.i{width:12px;height:12px}
+.parts{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.part{font-size:12px;line-height:18px;padding:1px 8px;border-radius:999px;border:1px solid var(--border);color:var(--muted-foreground);white-space:nowrap}
+.part.up{color:var(--success);border-color:var(--success-border);background:var(--success-soft)}
+.part.down{color:var(--destructive);border-color:var(--destructive-border);background:var(--destructive-soft)}
 .badge.secondary{background:var(--secondary);color:var(--secondary-foreground)}
 .badge.outline{border-color:var(--border);color:var(--foreground)}
 .badge.success{background:var(--success-soft);color:var(--success);border-color:var(--success-border)}
@@ -544,7 +548,11 @@ const ACTIVE = ["applied","interview","offer","rejected"];
 const SOURCES = [["all","All"],["linkedin","LinkedIn"],["naukri","Naukri"],["other","Other"]];
 let srcf = ls.get("srcf", "all");
 const srcKey = j => j.source.startsWith("linkedin") ? "linkedin" : j.source.startsWith("naukri") ? "naukri" : "other";
-const BUCKETS = [["all","All"],["pack","Pack ready"],["remote_india","Remote · India"],["remote_global","Remote · Global"],["onsite_mumbai","Mumbai office"],["onsite_international","Abroad"]];
+const BUCKETS = [["all","All"],["pack","Pack ready"],["fresh","New"],["onsite_mumbai","Mumbai"],["remote_india","Remote · India"],["remote_global","Remote · Global"],["onsite_international","Abroad"],["low","Low match"]];
+const LOW = 50;   // below this a job is hidden from the main queue (still under "Low match")
+const strong = j => j.needs_jd || (j.rank ?? 0) >= LOW;
+const fresh = j => { const d = days(j.posted_at || j.first_seen); return d != null && d <= 3; };
+const inBucket = (j, k) => k === "low" ? !strong(j) : strong(j) && (k === "all" || (k === "pack" ? j.pack : k === "fresh" ? fresh(j) : j.bucket === k));
 const VIEWS = [["review","Review","inbox"],["needs","Needs JD","file"],["tracker","Tracker","list"],["insights","Insights","chart"],["sources","Sources","activity"]];
 if (!VIEWS.some(v => v[0] === view)) view = "review";
 const ago = t => { if (!t) return "never"; const m = Math.round((Date.now() - new Date(t)) / 60000);
@@ -564,9 +572,9 @@ function inView(j, v = view){
 }
 function visible(){
   const q = query.trim().toLowerCase();
-  const out = jobs.filter(j => inView(j) && (view === "needs" ? (srcf === "all" || srcKey(j) === srcf) : (bucket === "all" || (bucket === "pack" ? j.pack : j.bucket === bucket)))
+  const out = jobs.filter(j => inView(j) && (view === "needs" ? (srcf === "all" || srcKey(j) === srcf) : inBucket(j, bucket))
     && (!q || `${j.title} ${j.company} ${j.location} ${(j.kw_matched || []).join(" ")}`.toLowerCase().includes(q)));
-  return sort === "new" ? out.sort((a, b) => (b.first_seen || "").localeCompare(a.first_seen || "")) : out.sort((a, b) => (b.rank ?? 0) - (a.rank ?? 0));
+  return sort === "new" ? out.sort((a, b) => (b.first_seen || "").localeCompare(a.first_seen || "")) : out.sort((a, b) => (b.sort_key ?? b.rank ?? 0) - (a.sort_key ?? a.rank ?? 0));
 }
 async function load(quiet){
   if (!quiet) $("#sub").textContent = "Loading…";
@@ -584,7 +592,7 @@ async function load(quiet){
 /* ================= shell ================= */
 function renderNav(){
   $("#nav").innerHTML = VIEWS.map(([k, label, icon], i) => {
-    const n = ["review","needs","tracker"].includes(k) ? jobs.filter(j => inView(j, k)).length : "";
+    const n = ["review","needs","tracker"].includes(k) ? jobs.filter(j => inView(j, k) && (k !== "review" || strong(j))).length : "";
     return `<button class="nav-item" data-v="${k}" ${view === k ? 'aria-current="page"' : ""} title="${label} (${i + 1})">${ic(icon)}<span>${label}</span><span class="count">${n}</span></button>`;
   }).join("");
   $("#nav").querySelectorAll(".nav-item").forEach(b => b.onclick = () => go(b.dataset.v));
@@ -628,12 +636,13 @@ function renderChips(){
     $("#chips").querySelectorAll(".chip").forEach(c => c.onclick = () => { srcf = c.dataset.s; ls.set("srcf", srcf); renderChips(); renderList(); });
     return;
   }
-  const cnt = k => k === "all" ? base.length : k === "pack" ? base.filter(j => j.pack).length : base.filter(j => j.bucket === k).length;
+  const cnt = k => base.filter(j => inBucket(j, k)).length;
   $("#chips").innerHTML = BUCKETS.map(([k, l]) => `<button class="chip" data-b="${k}" aria-pressed="${bucket === k}">${l}<span class="cn">${cnt(k)}</span></button>`).join("");
   $("#chips").querySelectorAll(".chip").forEach(c => c.onclick = () => { bucket = c.dataset.b; ls.set("bucket", bucket); renderChips(); renderList(); });
 }
 function badges(j){
   const b = [];
+  if (fresh(j) && st(j.id) === "new") b.push(`<span class="badge info">New</span>`);
   if (j.pack) b.push(`<span class="badge secondary">${ic("check")}Pack ready</span>`);
   if (j.needs_jd) b.push(`<span class="badge warning">Needs JD</span>`);
   if (j.visa === "sponsorship_or_relocation") b.push(`<span class="badge success">Visa support</span>`);
@@ -761,7 +770,8 @@ function renderDetail(){
         <div class="bigscore">${j.needs_jd && !ai.score ? "—" : n}<small>/100</small></div>
         <div><div style="font-weight:500">${esc(ai.verdict || (j.needs_jd ? "Paste the description for a real match score." : "Keyword match only."))}</div>
         <div class="progress" style="margin:10px 0 6px"><div style="width:${Math.max(0, Math.min(100, n))}%"></div></div>
-        <div class="muted" style="font-size:13px">${ai.score != null ? "AI match score" : "Keyword match score"}${ai.years_required ? ` · asks for ${esc(ai.years_required)}+ years` : ""}${ai.seniority_fit === "under" ? " · may need more experience" : ai.seniority_fit === "over" ? " · you may be over-qualified" : ""}</div></div>
+        <div class="muted" style="font-size:13px">${ai.score != null ? "AI fit" : "Keyword fit"} ${ai.score ?? j.kw_score ?? "—"}${(j.rank_parts || []).length ? " + adjustments below" : ""}${j.years_req ? ` · asks for ${esc(j.years_req[0])}${j.years_req[1] ? "–" + esc(j.years_req[1]) : "+"} years` : ai.years_required ? ` · asks for ${esc(ai.years_required)}+ years` : ""}${ai.seniority_fit === "under" ? " · may need more experience" : ai.seniority_fit === "over" ? " · you may be over-qualified" : ""}</div>
+        ${(j.rank_parts || []).length ? `<div class="parts">${j.rank_parts.map(([l, v]) => `<span class="part ${v > 0 ? "up" : "down"}">${v > 0 ? "+" : "−"}${Math.abs(v)} ${esc(l)}</span>`).join("")}</div>` : ""}</div>
       </div></div>
       ${warn ? `<div class="alert warning">${ic("alert")}<div><b>Check before applying</b><ul>${warn}</ul></div></div>` : ""}
       ${j.needs_jd ? `<div class="card"><div class="card-h"><h3 class="card-t">Get a tailored resume</h3><p class="card-d">This source only shared a preview. Paste the full description to get your pack.</p></div>
