@@ -1,0 +1,10 @@
+{
+ "v": 1,
+ "kdf": "PBKDF2-SHA256",
+ "iter": 600000,
+ "cipher": "AES-256-GCM",
+ "salt": "37mfrMa9j+YQ8PwEb/rM2A==",
+ "iv": "oLeqm+s1EUR7vHu7",
+ "ct": "2RWxx8IPZ1Y9kP15VF46JvsjDYO9RnyuXQRqwDd4XJxiOf+eqXR9PpRutl3topGSSqkY/yL4vcBWeFbqoYL1+gdByCD/RAvsBFbJL6e2uMMW9ixp0a+BoD+Fs7wZ+YR8Dj9yZk+0IWo8r1gSz8/1vlqo50HCqFKh9Af7yys1bW5cswTPdQiPX+oyjpKcELDBNrIh0YOPVSsRYjOyg4VAx+HUm/s4uhdpd+QpM5XqnBzqUA==",
+ "created": "2026-10-19T12:39:57.196Z"
+}
