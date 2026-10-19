@@ -83,7 +83,8 @@ svg.i{width:16px;height:16px;flex:none;stroke:currentColor;fill:none;stroke-widt
 .btn.block{width:100%}
 .input,.textarea,.select{width:100%;border:1px solid var(--input);background:transparent;border-radius:calc(var(--radius) - 2px);box-shadow:var(--shadow-sm);font-size:14px;transition:border-color .15s,box-shadow .15s}
 .input{height:36px;padding:0 12px}
-.select{height:36px;padding:0 10px;appearance:auto;background:var(--background)}
+.select{height:36px;padding:0 32px 0 12px;appearance:none;-webkit-appearance:none;cursor:pointer;line-height:1;background:var(--background) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2371717a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") no-repeat right 10px center/16px}
+.select.sm{height:32px;font-size:13px;padding:0 30px 0 10px;background-position:right 8px center}
 .textarea{min-height:76px;padding:8px 12px;line-height:1.55;resize:vertical}
 .textarea.tall{min-height:180px}
 .input:focus,.textarea:focus,.select:focus{outline:none;border-color:var(--ring);box-shadow:0 0 0 3px color-mix(in srgb,var(--ring) 25%,transparent)}
@@ -194,6 +195,17 @@ details.card[open]>summary svg{transform:rotate(180deg)}
 .empty h3{color:var(--foreground);font-size:16px;font-weight:600;margin:0 0 6px}
 .empty p{max-width:380px;margin:0 0 16px;font-size:14px}
 .back{display:none}
+.skel{padding:12px 16px;border-bottom:1px solid var(--border)}
+.skel i{display:block;height:12px;border-radius:4px;background:var(--muted);margin:6px 0;animation:pulse 1.4s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.45}}
+.pw-wrap{position:relative}.pw-wrap .input{padding-right:40px}
+.pw-eye{position:absolute;right:4px;top:4px;height:28px;width:32px;border:0;background:none;border-radius:4px;color:var(--muted-foreground);cursor:pointer;display:grid;place-items:center}
+.pw-eye:hover{background:var(--accent);color:var(--foreground)}
+.chip .cn{margin-left:4px;opacity:.6;font-variant-numeric:tabular-nums}
+.callout{margin:12px;border:1px dashed var(--input);border-radius:var(--radius);padding:12px 14px;font-size:13px;color:var(--muted-foreground);background:var(--sidebar)}
+.callout b{color:var(--foreground);font-weight:600;display:block;margin-bottom:4px}
+.bm{display:inline-flex;align-items:center;gap:6px;margin-top:8px;height:28px;padding:0 10px;border:1px solid var(--input);border-radius:calc(var(--radius) - 2px);font-size:12px;font-weight:500;color:var(--foreground);text-decoration:none;cursor:grab;background:var(--background)}
+.chart-empty{position:absolute;inset:8px 0 26px;display:grid;place-items:center;color:var(--muted-foreground);font-size:13px;text-align:center;pointer-events:none}
 
 /* ===== pages ===== */
 .page{max-width:1120px;margin:0 auto;padding:24px 32px 80px}
@@ -211,7 +223,7 @@ table.tbl{width:100%;border-collapse:collapse;font-size:14px}
 .tbl tr:last-child td{border-bottom:0}
 .tbl tbody tr:hover td{background:var(--muted)}
 .tbl .num{text-align:right;font-variant-numeric:tabular-nums}
-.tbl .select{height:32px;width:auto;font-size:13px}
+.tbl .select{width:auto}
 .linkish{background:none;border:0;padding:0;font-weight:500;cursor:pointer;text-align:left}
 .linkish:hover{text-decoration:underline;text-underline-offset:4px}
 .chart{position:relative;padding-top:8px}
@@ -314,7 +326,7 @@ dialog .d-d{color:var(--muted-foreground);margin:6px 0 20px}
       <p class="muted" style="text-align:center;margin:6px 0 22px">Enter your password to open JobPilot</p>
       <form id="formUnlock">
         <label class="label" for="pw">Password</label>
-        <input class="input" id="pw" type="password" autocomplete="current-password" required>
+        <div class="pw-wrap"><input class="input" id="pw" type="password" autocomplete="current-password" required><button type="button" class="pw-eye" data-eye="pw" aria-label="Show password"><svg class="i"><use href="#i-eye"/></svg></button></div>
         <div class="err" id="pwErr" role="alert"></div>
         <label class="checkbox" style="margin:4px 0 18px"><input type="checkbox" id="remember"> Keep me signed in on this device</label>
         <button class="btn block" id="btnUnlock" type="submit">Unlock</button>
@@ -329,7 +341,7 @@ dialog .d-d{color:var(--muted-foreground);margin:6px 0 20px}
           <input class="input" id="suToken" type="password" autocomplete="off" required>
           <div class="hint">Give it access to <b>jobpilot</b> and <b>jobpilot-dashboard</b>, with Contents and Actions set to Read and write.</div></div>
         <div class="field"><label class="label" for="suPw">Create a password</label>
-          <input class="input" id="suPw" type="password" autocomplete="new-password" required>
+          <div class="pw-wrap"><input class="input" id="suPw" type="password" autocomplete="new-password" required><button type="button" class="pw-eye" data-eye="suPw" aria-label="Show password"><svg class="i"><use href="#i-eye"/></svg></button></div>
           <div class="strength" id="strength"><i></i><i></i><i></i><i></i></div>
           <div class="hint">At least 12 characters. A short sentence works well.</div></div>
         <div class="field"><label class="label" for="suPw2">Confirm password</label>
@@ -375,7 +387,7 @@ dialog .d-d{color:var(--muted-foreground);margin:6px 0 20px}
 
 <dialog id="dlgAdd">
   <h3>Tailor a job</h3>
-  <p class="d-d">Paste any job you found. Your tailored resume, cover note and answers are ready in about 2 minutes.</p>
+  <p class="d-d" id="addHint">Paste any job you found. Your tailored resume, cover note and answers are ready in about 2 minutes.</p>
   <form method="dialog" id="formAdd">
     <div class="grid2" style="gap:12px"><div class="field"><label class="label" for="aTitle">Job title</label><input class="input" id="aTitle" required></div>
     <div class="field"><label class="label" for="aCompany">Company</label><input class="input" id="aCompany" required></div></div>
@@ -396,6 +408,10 @@ dialog .d-d{color:var(--muted-foreground);margin:6px 0 20px}
     <div id="npwErr" style="color:var(--destructive);font-size:13px;min-height:16px;margin-bottom:8px"></div>
     <button class="btn sm" type="submit">Update password</button></form>
   </div></div>
+  <div class="card" style="box-shadow:none;margin-top:12px"><div class="card-c" style="padding:16px">
+    <b style="font-size:14px">Send to JobPilot button</b>
+    <p class="hint" style="margin:4px 0 0">Drag it to your bookmarks bar. On a LinkedIn or Naukri job page, click it to send the full description here.</p>
+    <a class="bm" id="bmLink2">Send to JobPilot</a></div></div>
   <div class="d-foot" style="justify-content:space-between;margin-top:16px">
     <button class="btn ghost sm" id="btnForget" style="color:var(--destructive)">Sign out of this device</button>
     <form method="dialog"><button class="btn outline sm">Close</button></form>
@@ -519,15 +535,21 @@ async function writeFile(path, content, message){
 const dispatch = mode => gh(`/actions/workflows/scan.yml/dispatches`, { method: "POST", body: JSON.stringify({ ref: cfg.branch || "main", inputs: { mode } }) });
 
 /* ================= state ================= */
-let jobs = [], status = {}, health = {}, runs = [], updatedAt = "";
+let jobs = [], status = {}, health = {}, runs = [], updatedAt = "", loaded = false, loadError = "", saving = false;
 let view = ls.get("view", "review"), bucket = ls.get("bucket", "all"), sort = ls.get("sort", "score"), query = "", selected = null;
 const packCache = {};
 const STATUSES = [["applied","Applied"],["interview","Interview"],["offer","Offer"],["rejected","Rejected"],["skipped","Not for me"]];
 const LABEL = Object.fromEntries([["new","To review"], ...STATUSES]);
 const ACTIVE = ["applied","interview","offer","rejected"];
+const SOURCES = [["all","All"],["linkedin","LinkedIn"],["naukri","Naukri"],["other","Other"]];
+let srcf = ls.get("srcf", "all");
+const srcKey = j => j.source.startsWith("linkedin") ? "linkedin" : j.source.startsWith("naukri") ? "naukri" : "other";
 const BUCKETS = [["all","All"],["pack","Pack ready"],["remote_india","Remote · India"],["remote_global","Remote · Global"],["onsite_mumbai","Mumbai office"],["onsite_international","Abroad"]];
 const VIEWS = [["review","Review","inbox"],["needs","Needs JD","file"],["tracker","Tracker","list"],["insights","Insights","chart"],["sources","Sources","activity"]];
 if (!VIEWS.some(v => v[0] === view)) view = "review";
+const ago = t => { if (!t) return "never"; const m = Math.round((Date.now() - new Date(t)) / 60000);
+  return m < 1 ? "just now" : m < 60 ? `${m} min ago` : m < 1440 ? `${Math.round(m / 60)} h ago` : new Date(t).toLocaleDateString([], { day: "numeric", month: "short" }); };
+const dayLabel = n => n == null ? "" : n <= 0 ? "Today" : n === 1 ? "Yesterday" : `${n}d ago`;
 const st = id => (status[id] || {}).status || "new";
 const days = iso => iso ? Math.floor((Date.now() - new Date(iso)) / 864e5) : null;
 const appliedAt = id => (status[id] || {}).applied_at || (status[id] || {}).updated_at;
@@ -542,7 +564,7 @@ function inView(j, v = view){
 }
 function visible(){
   const q = query.trim().toLowerCase();
-  const out = jobs.filter(j => inView(j) && (bucket === "all" || (bucket === "pack" ? j.pack : j.bucket === bucket))
+  const out = jobs.filter(j => inView(j) && (view === "needs" ? (srcf === "all" || srcKey(j) === srcf) : (bucket === "all" || (bucket === "pack" ? j.pack : j.bucket === bucket)))
     && (!q || `${j.title} ${j.company} ${j.location} ${(j.kw_matched || []).join(" ")}`.toLowerCase().includes(q)));
   return sort === "new" ? out.sort((a, b) => (b.first_seen || "").localeCompare(a.first_seen || "")) : out.sort((a, b) => (b.rank ?? 0) - (a.rank ?? 0));
 }
@@ -552,10 +574,11 @@ async function load(quiet){
     if (DEMO) { ({ jobs, status, health, runs } = window.JOBPILOT_DEMO); updatedAt = window.JOBPILOT_DEMO.updated_at; }
     else { const [j, s, h, r] = await Promise.all([readJson("data/jobs.json", { jobs: [] }), readJson("data/status.json", {}), readJson("data/source_state.json", {}), readJson("data/run_log.json", [])]);
       jobs = j.jobs || []; updatedAt = j.updated_at; status = s; health = h; runs = r; }
-  } catch (e) { toast(e.message); }
-  const when = updatedAt ? new Date(updatedAt).toLocaleString([], { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" }) : "—";
-  $("#sub").textContent = DEMO ? "Preview snapshot" : `Updated ${when}`;
-  render();
+    loadError = "";
+  } catch (e) { loadError = e.message; toast(e.message); }
+  loaded = true;
+  $("#sub").textContent = DEMO ? "Preview snapshot" : loadError ? "Couldn't load" : `Updated ${ago(updatedAt)}`;
+  render(); handleIncoming();
 }
 
 /* ================= shell ================= */
@@ -587,7 +610,7 @@ function renderReview(){
           <div class="search">${ic("search")}<input class="input" id="q" placeholder="Search title, company, skill…" aria-label="Search"></div>
           <div class="chips" id="chips"></div>
           <div class="row" style="justify-content:space-between;align-items:center"><span class="muted" style="font-size:12px" id="count"></span>
-            <select class="select" id="sort" aria-label="Sort" style="height:32px;width:auto;font-size:13px"><option value="score">Best match</option><option value="new">Newest</option></select></div>
+            <select class="select sm" id="sort" aria-label="Sort" style="width:auto"><option value="score">Best match</option><option value="new">Newest</option></select></div>
         </div>
         <div class="list" id="list"></div>
         <div class="listfoot">Press <span class="kbd">?</span> for keyboard shortcuts</div>
@@ -599,7 +622,14 @@ function renderReview(){
   renderChips(); renderList(); renderDetail();
 }
 function renderChips(){
-  $("#chips").innerHTML = BUCKETS.map(([k, l]) => `<button class="chip" data-b="${k}" aria-pressed="${bucket === k}">${l}</button>`).join("");
+  const base = jobs.filter(j => inView(j));
+  if (view === "needs") {
+    $("#chips").innerHTML = SOURCES.map(([k, l]) => `<button class="chip" data-s="${k}" aria-pressed="${srcf === k}">${l}<span class="cn">${k === "all" ? base.length : base.filter(j => srcKey(j) === k).length}</span></button>`).join("");
+    $("#chips").querySelectorAll(".chip").forEach(c => c.onclick = () => { srcf = c.dataset.s; ls.set("srcf", srcf); renderChips(); renderList(); });
+    return;
+  }
+  const cnt = k => k === "all" ? base.length : k === "pack" ? base.filter(j => j.pack).length : base.filter(j => j.bucket === k).length;
+  $("#chips").innerHTML = BUCKETS.map(([k, l]) => `<button class="chip" data-b="${k}" aria-pressed="${bucket === k}">${l}<span class="cn">${cnt(k)}</span></button>`).join("");
   $("#chips").querySelectorAll(".chip").forEach(c => c.onclick = () => { bucket = c.dataset.b; ls.set("bucket", bucket); renderChips(); renderList(); });
 }
 function badges(j){
@@ -616,15 +646,25 @@ function renderList(){
   const items = visible();
   $("#count").textContent = `${items.length} job${items.length === 1 ? "" : "s"}`;
   renderNav();
+  const callout = view === "needs" ? bookmarkletCallout() : "";
+  if (!loaded) { $("#list").innerHTML = Array(6).fill('<div class="skel"><i style="width:70%"></i><i style="width:40%"></i><i style="width:55%;height:18px"></i></div>').join(""); return; }
+  if (loadError) { $("#list").innerHTML = `<div class="empty"><div class="ic">${ic("alert")}</div><h3>Couldn't load your jobs</h3><p>${esc(loadError)}</p><button class="btn outline sm" id="retry">${ic("refresh")}Try again</button></div>`;
+    $("#retry").onclick = () => { loaded = false; render(); load(); }; return; }
   if (!items.length) {
-    $("#list").innerHTML = `<div class="empty"><div class="ic">${ic(view === "review" ? "inbox" : "file")}</div><h3>${view === "review" ? "You're all caught up" : "Nothing to fill in"}</h3>
-      <p>${view === "review" ? "New matches arrive at 8:17 AM and 8:17 PM. Start a scan or tailor a job you found yourself." : "Jobs from LinkedIn and Naukri alerts, Dribbble and Jooble land here when only a preview was available."}</p></div>`;
-    return;
+    const filtered = query.trim() || (view === "needs" ? srcf !== "all" : bucket !== "all");
+    $("#list").innerHTML = callout + (filtered
+      ? `<div class="empty"><div class="ic">${ic("search")}</div><h3>No jobs match</h3><p>Nothing fits ${query.trim() ? `“${esc(query.trim())}”` : "this filter"}.</p><button class="btn outline sm" id="clearF">Clear filters</button></div>`
+      : `<div class="empty"><div class="ic">${ic(view === "review" ? "inbox" : "file")}</div><h3>${view === "review" ? "You're all caught up" : "Nothing to fill in"}</h3>
+      <p>${view === "review" ? "New matches arrive at 8:17 AM and 8:17 PM. Start a scan or tailor a job you found yourself." : "LinkedIn and Naukri alert jobs, plus Dribbble and Jooble previews, appear here when only a short preview was available."}</p></div>`);
+    const cf = $("#clearF"); if (cf) cf.onclick = () => { query = ""; $("#q").value = ""; bucket = "all"; srcf = "all"; ls.set("bucket", "all"); ls.set("srcf", "all"); renderChips(); renderList(); };
+    wireCallout(); return;
   }
-  $("#list").innerHTML = items.map(j => { const n = j.rank ?? 0;
-    return `<button class="item" data-id="${esc(j.id)}" aria-current="${selected === j.id}"><span class="t">${esc(j.title)}</span><span class="s ${n >= 80 ? "hi" : ""}" title="Match score">${n}</span>
+  $("#list").innerHTML = callout + items.map(j => { const n = j.rank ?? 0, nd = j.needs_jd && !j.ai;
+    return `<button class="item" data-id="${esc(j.id)}" aria-current="${selected === j.id}"><span class="t">${esc(j.title)}</span><span class="s ${!nd && n >= 80 ? "hi" : ""}" title="${nd ? "Score after you paste the description" : "Match score"}">${nd ? "—" : n}</span>
       <span class="c">${esc(j.company)}</span><span class="b">${badges(j)}</span></button>`; }).join("");
   $("#list").querySelectorAll(".item").forEach(r => r.onclick = () => select(r.dataset.id));
+  wireCallout();
+  document.title = `JobPilot · ${jobs.filter(j => inView(j, "review")).length} to review`;
 }
 function select(id){
   selected = id; const rv = $("#review"); if (!rv) return; rv.classList.add("show");
@@ -653,7 +693,8 @@ async function previewPdf(j){
   const w = window.open("", "_blank"); const url = URL.createObjectURL(new Blob([await pdfBlob(j)], { type: "application/pdf" }));
   if (w) w.location = url; else location.href = url; markStep(j.id, 1);
 }
-async function setStatus(j, s, { advance = false } = {}){
+async function setStatus(j, s, { advance = false, note: noteOnly = false } = {}){
+  if (saving) return;
   const prev = status[j.id];
   const note = ($("#note") && selected === j.id) ? $("#note").value : (prev || {}).note || "";
   const now = new Date().toISOString(), applied_at = (prev || {}).applied_at || (ACTIVE.includes(s) ? now : undefined);
@@ -662,12 +703,14 @@ async function setStatus(j, s, { advance = false } = {}){
   status[j.id] = { status: s, updated_at: now, note, title: `${j.title} @ ${j.company}`, ...(applied_at && ACTIVE.includes(s) ? { applied_at } : {}) };
   if (advance) selected = nextId;
   render(); if (advance && nextId) select(nextId);
-  if (DEMO) { toast(`${LABEL[s]} — preview only, not saved`); return; }
+  if (DEMO) { toast(noteOnly ? "Note saved (preview only)" : `${LABEL[s]} — preview only, not saved`); return; }
+  saving = true;
   try {
     await writeFile("data/status.json", async () => { const remote = await readJson("data/status.json", {}); remote[j.id] = status[j.id]; status = { ...remote, ...status }; return JSON.stringify(remote, null, 1); },
       `status: ${s} — ${j.title} @ ${j.company}`.slice(0, 120));
-    toast(s === "new" ? "Moved back to review" : `Marked as ${LABEL[s].toLowerCase()}`);
+    toast(noteOnly ? "Note saved" : s === "new" ? "Moved back to review" : `Marked as ${LABEL[s].toLowerCase()}`);
   } catch (e) { status[j.id] = prev; render(); toast(e.message); }
+  finally { saving = false; }
 }
 let watching = null;
 function watchForUpdate(label){
@@ -693,7 +736,7 @@ function renderDetail(){
   if (!j) {
     const n = visible().length;
     d.innerHTML = `<div class="empty" style="min-height:70%"><div class="ic">${ic("briefcase")}</div><h3>${n ? "Select a job" : "Nothing selected"}</h3>
-      <p>${n ? "Each match has an apply kit: your tailored resume, the job link and ready-to-paste answers." : "When new matches arrive, they'll show up here."}</p>
+      <p>${!n ? "When new matches arrive, they'll show up here." : view === "needs" ? "These jobs only came with a preview. Open one, add its description (or use the Send to JobPilot button), and get a tailored pack." : "Each match has an apply kit: your tailored resume, the job link and ready-to-paste answers."}</p>
       ${n ? `<button class="btn outline sm" id="first">Open the top match <span class="kbd">J</span></button>` : ""}</div>`;
     const f = $("#first"); if (f) f.onclick = () => move(1);
     return;
@@ -709,13 +752,13 @@ function renderDetail(){
     <div class="dhead"><div style="min-width:0">
       <h2>${esc(j.title)}</h2>
       <div class="dmeta"><span>${ic("building")}${esc(j.company)}</span><span>${ic("pin")}${esc(j.location || "Location not stated")}</span>
-        ${j.posted_at ? `<span>${ic("clock")}${days(j.posted_at)}d ago</span>` : ""}${j.salary ? `<span>${esc(j.salary)}</span>` : ""}</div>
+        ${j.posted_at ? `<span>${ic("clock")}${dayLabel(days(j.posted_at))}</span>` : ""}${j.salary ? `<span>${esc(j.salary)}</span>` : ""}</div>
       <div class="muted" style="font-size:13px;margin-top:6px">${esc(j.attribution || j.source)}${also ? ` · Also on ${also}` : ""}</div></div>
       ${sBadge ? `<span class="badge ${sBadge}">${esc(LABEL[s])}</span>` : ""}
     </div>
     <div class="stack">
       <div class="card"><div class="card-c scorecard">
-        <div class="bigscore">${n}<small>/100</small></div>
+        <div class="bigscore">${j.needs_jd && !ai.score ? "—" : n}<small>/100</small></div>
         <div><div style="font-weight:500">${esc(ai.verdict || (j.needs_jd ? "Paste the description for a real match score." : "Keyword match only."))}</div>
         <div class="progress" style="margin:10px 0 6px"><div style="width:${Math.max(0, Math.min(100, n))}%"></div></div>
         <div class="muted" style="font-size:13px">${ai.score != null ? "AI match score" : "Keyword match score"}${ai.years_required ? ` · asks for ${esc(ai.years_required)}+ years` : ""}${ai.seniority_fit === "under" ? " · may need more experience" : ai.seniority_fit === "over" ? " · you may be over-qualified" : ""}</div></div>
@@ -752,7 +795,7 @@ function renderDetail(){
     </div></div>`;
   $("#back").onclick = () => $("#review").classList.remove("show");
   d.querySelectorAll("[data-status]").forEach(b => b.onclick = () => setStatus(j, b.dataset.status, { advance: !!b.dataset.adv }));
-  $("#saveNote").onclick = () => setStatus(j, st(j.id));
+  $("#saveNote").onclick = () => setStatus(j, st(j.id), { note: true });
   if ($("#dl")) $("#dl").onclick = () => downloadPdf(j).catch(e => toast(e.message));
   if ($("#pv")) $("#pv").onclick = () => previewPdf(j).catch(e => toast(e.message));
   if ($("#openJob")) $("#openJob").addEventListener("click", () => markStep(j.id, 2));
@@ -785,6 +828,44 @@ async function renderAnswers(j){
   $("#copyAll").onclick = e => { copyText(F.map(([k, l]) => `${l}\n${box.querySelector(`[data-k="${k}"]`).value}`).join("\n\n"), e.currentTarget); markStep(j.id, 3); };
 }
 
+/* ================= "Send to JobPilot" bookmark ================= */
+const DASH_URL = location.hostname.endsWith(".github.io") ? location.origin + location.pathname : "https://pratik-kathe.github.io/jobpilot-dashboard/";
+function bookmarkletHref(){
+  const src = `(()=>{const q=s=>{for(const x of s.split('|')){const e=document.querySelector(x);if(e&&e.innerText&&e.innerText.trim())return e.innerText.trim()}return''};`
+    + `const sel=String(getSelection()).trim();`
+    + `const jd=sel.length>200?sel:(q('.jobs-description__content|.jobs-box__html-content|#job-details|.show-more-less-html__markup|section[class*=job-desc]|div[class*=job-desc]|div[class*=JDC]|div[class*=dang-inner-html]|[class*=jobDescription]|[class*=description]')||document.body.innerText);`
+    + `const t=q('.job-details-jobs-unified-top-card__job-title|.top-card-layout__title|[class*=jd-header-title]|h1');`
+    + `const c=q('.job-details-jobs-unified-top-card__company-name|.topcard__org-name-link|[class*=jd-header-comp-name] a|[class*=comp-name]|[class*=company-name]');`
+    + `const d={u:location.href.split('#')[0],t:t.split('\\n')[0].slice(0,150),c:c.split('\\n')[0].slice(0,100),jd:jd.slice(0,20000)};`
+    + `window.open('${DASH_URL}#tailor='+encodeURIComponent(JSON.stringify(d)),'jobpilot')})()`;
+  return "javascript:" + encodeURIComponent(src);
+}
+function bookmarkletCallout(){
+  if (ls.get("bmHidden", false)) return "";
+  return `<div class="callout"><b>Skip the copy-paste</b>Drag this button to your bookmarks bar. On any LinkedIn or Naukri job page, click it and the full description comes straight here.
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><a class="bm" id="bmLink" title="Drag me to your bookmarks bar">${ic("plus")}Send to JobPilot</a>
+    <button class="btn ghost xs" id="bmHide" style="margin-top:8px">Hide</button></div></div>`;
+}
+function wireCallout(){
+  const a = $("#bmLink"); if (a) { a.setAttribute("href", bookmarkletHref()); a.onclick = e => { e.preventDefault(); toast("Drag the button to your bookmarks bar, then click it on a LinkedIn or Naukri job page."); }; }
+  const h = $("#bmHide"); if (h) h.onclick = () => { ls.set("bmHidden", true); renderList(); };
+}
+let incomingJobId = null;
+window.addEventListener("hashchange", () => { if (loaded && !$("#shell").classList.contains("hidden")) handleIncoming(); });
+const jobKeyFromUrl = u => { u = String(u || ""); const li = u.match(/linkedin\.com\/.*?(?:jobs\/view\/|currentJobId=)(\d+)/); if (li) return "li" + li[1];
+  const nk = u.match(/naukri\.com\/(job-listings-[a-z0-9-]+?-(\d{6,}))/); if (nk) return "nk" + nk[2]; return u.split("?")[0].replace(/\/$/, ""); };
+function handleIncoming(){
+  if (!location.hash.startsWith("#tailor=")) return;
+  let d; try { d = JSON.parse(decodeURIComponent(location.hash.slice(8))); } catch { return; }
+  history.replaceState(null, "", location.pathname + location.search);
+  const key = jobKeyFromUrl(d.u), match = jobs.find(j => jobKeyFromUrl(j.url) === key || (j.also_on || []).some(a => jobKeyFromUrl(a.url) === key));
+  incomingJobId = match ? match.id : null;
+  $("#aTitle").value = (match && match.title) || d.t || ""; $("#aCompany").value = (match && match.company) || d.c || "";
+  $("#aUrl").value = d.u || ""; $("#aJd").value = (d.jd || "").trim();
+  $("#addHint").textContent = match ? `Matched to “${match.title}” from your ${srcKey(match) === "other" ? "" : srcKey(match) === "linkedin" ? "LinkedIn " : "Naukri "}alerts. Check the details, then create the pack.` : "Check the title, company and description, then create the pack.";
+  $("#dlgAdd").showModal();
+}
+
 /* ================= tracker ================= */
 function trackerView(){
   const rows = jobs.filter(j => inView(j, "tracker")).sort((a, b) => (appliedAt(b.id) || "").localeCompare(appliedAt(a.id) || ""));
@@ -795,7 +876,7 @@ function trackerView(){
     ${rows.map(j => { const s = st(j.id), d0 = days(appliedAt(j.id));
       const next = s === "applied" ? (d0 >= 7 ? `<span class="badge warning">Follow up</span>` : `<span class="muted">Wait ${7 - (d0 || 0)} days</span>`) : s === "interview" ? `<span class="badge info">Prepare</span>` : s === "offer" ? `<span class="badge success">Negotiate</span>` : `<span class="muted">—</span>`;
       return `<tr><td><button class="linkish" data-open="${esc(j.id)}">${esc(j.title)}</button><div class="muted" style="font-size:13px">${esc(j.company)}</div></td>
-        <td><select class="select" data-st="${esc(j.id)}" aria-label="Status">${opt(s)}</select></td><td class="num">${d0 == null ? "—" : d0 === 0 ? "Today" : `${d0}d ago`}</td><td>${next}</td>
+        <td><select class="select sm" data-st="${esc(j.id)}" aria-label="Status">${opt(s)}</select></td><td class="num">${d0 == null ? "—" : dayLabel(d0)}</td><td>${next}</td>
         <td class="hide-m muted" style="font-size:13px;max-width:260px">${esc(((status[j.id] || {}).note || "").slice(0, 120))}</td></tr>`; }).join("")}
     </tbody></table></div></div>`;
 }
@@ -829,7 +910,8 @@ function insightsView(){
       <div class="card"><div class="card-h"><h3 class="card-t">Applications per week</h3><p class="card-d">Last 8 weeks</p></div><div class="card-c">
         <div class="chart" id="wk"><div class="bars" role="img" aria-label="Applications per week">${W.map((w, i) => `<div class="bcol" tabindex="0" data-tip="Week of ${fmt(w.s)} · ${w.n} application${w.n === 1 ? "" : "s"}">
           ${i === peak && w.n ? `<span class="v" style="bottom:calc(${100 * w.n / max}% + 4px)">${w.n}</span>` : ""}<div class="bar" style="height:${100 * w.n / max}%"></div></div>`).join("")}</div>
-        <div class="xl">${W.map((w, i) => `<span>${i === 7 ? "This wk" : fmt(w.s)}</span>`).join("")}</div><div class="tip" id="tip"></div></div>
+        <div class="xl">${W.map((w, i) => `<span>${i === 7 ? "This wk" : fmt(w.s)}</span>`).join("")}</div><div class="tip" id="tip"></div>
+        ${W.every(w => !w.n) ? `<div class="chart-empty">No applications in the last 8 weeks yet.<br>Mark jobs as Applied to see your trend.</div>` : ""}</div>
         <details style="margin-top:12px"><summary class="muted" style="font-size:13px;cursor:pointer">View as table</summary><table class="tbl" style="margin-top:8px"><thead><tr><th>Week of</th><th class="num">Applications</th></tr></thead><tbody>${W.map(w => `<tr><td>${fmt(w.s)}</td><td class="num">${w.n}</td></tr>`).join("")}</tbody></table></details>
       </div></div>
       <div class="card"><div class="card-h"><h3 class="card-t">Pipeline</h3><p class="card-d">From match to offer</p></div><div class="card-c">
@@ -848,6 +930,10 @@ function wireInsights(){
 }
 
 /* ================= sources ================= */
+const SRC_NAMES = { remotive: "Remotive", himalayas: "Himalayas (remote, India-eligible)", jobicy: "Jobicy", remoteok: "Remote OK", wwr: "We Work Remotely",
+  arbeitnow: "Arbeitnow (Europe)", adzuna: "Adzuna", ats_boards: "Company career pages (Greenhouse, Lever, Ashby)", gmail_alerts: "LinkedIn & Naukri alerts (from Gmail)",
+  workingnomads: "Working Nomads", dribbble: "Dribbble Jobs", authenticjobs: "Authentic Jobs", nodesk: "NoDesk", hn_hiring: "Hacker News — Who is hiring",
+  workday: "Company career pages (Workday)", google_jobs: "Google Jobs (Instahyre, Cutshort, Indeed…)", jooble: "Jooble India" };
 function sourcesView(){
   const N = Object.keys(health).filter(k => !k.startsWith("_")), paused = health._disabled_boards || [];
   const fmt = t => t ? new Date(t).toLocaleString([], { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" }) : "—";
@@ -855,7 +941,7 @@ function sourcesView(){
   return `<div class="page"><div class="page-h"><h2>Sources</h2><p>Where jobs come from, and whether each source answered on the last scan.</p></div>
     <div class="card" style="overflow-x:auto"><div class="card-c" style="padding-top:8px"><table class="tbl"><thead><tr><th>Source</th><th>Status</th><th class="num">Jobs</th><th class="num">Last checked</th><th class="hide-m">Notes</th></tr></thead><tbody>
     ${N.map(n => { const h = health[n] || {}, b = B[h.status] || ["outline","—"];
-      return `<tr><td style="text-transform:capitalize">${esc(n.replace(/_/g, " "))}</td><td><span class="badge ${b[0]}">${b[1]}</span></td><td class="num">${h.count ?? "—"}</td><td class="num">${fmt(h.last_fetch)}</td><td class="hide-m muted" style="font-size:13px">${esc(h.error || (h.board_errors || []).slice(0, 2).join("; "))}</td></tr>`; }).join("") || `<tr><td colspan="5" class="muted">No scans yet.</td></tr>`}
+      return `<tr><td>${esc(SRC_NAMES[n] || n.replace(/_/g, " "))}</td><td><span class="badge ${b[0]}">${b[1]}</span></td><td class="num">${h.count ?? "—"}</td><td class="num">${ago(h.last_fetch)}</td><td class="hide-m muted" style="font-size:13px">${esc(h.error || (h.board_errors || []).slice(0, 2).join("; "))}</td></tr>`; }).join("") || `<tr><td colspan="5" class="muted">No scans yet.</td></tr>`}
     </tbody></table>${paused.length ? `<p class="hint">Paused after 3 failures: ${paused.map(esc).join(", ")}</p>` : ""}</div></div>
     <div class="card" style="margin-top:16px;overflow-x:auto"><div class="card-h"><h3 class="card-t">Recent scans</h3></div><div class="card-c" style="padding-top:8px"><table class="tbl"><thead><tr><th>When</th><th class="num">Scanned</th><th class="num">New matches</th><th class="num">Packs</th><th class="num">AI calls</th></tr></thead><tbody>
     ${runs.slice(0, 10).map(x => `<tr><td>${fmt(x.at)}</td><td class="num">${x.fetched}</td><td class="num">${x.new_matches}</td><td class="num">${x.packs}</td><td class="num">${x.ai_calls}</td></tr>`).join("") || `<tr><td colspan="5" class="muted">No scans yet.</td></tr>`}
@@ -865,12 +951,16 @@ function sourcesView(){
 /* ================= wiring ================= */
 $("#btnAdd").onclick = () => $("#dlgAdd").showModal();
 $("#dlgAdd").addEventListener("close", () => { if ($("#dlgAdd").returnValue !== "go") return;
-  requestPack({ title: $("#aTitle").value.trim(), company: $("#aCompany").value.trim(), url: $("#aUrl").value.trim(), description: $("#aJd").value.trim() }).then(() => $("#formAdd").reset()).catch(e => toast(e.message)); });
+  const payload = { title: $("#aTitle").value.trim(), company: $("#aCompany").value.trim(), url: $("#aUrl").value.trim(), description: $("#aJd").value.trim() };
+  if (incomingJobId) payload.job_id = incomingJobId;
+  incomingJobId = null;
+  requestPack(payload).then(() => { $("#formAdd").reset(); $("#addHint").textContent = "Paste any job you found. Your tailored resume, cover note and answers are ready in about 2 minutes."; }).catch(e => toast(e.message)); });
+$("#btnAdd").addEventListener("click", () => { incomingJobId = null; });
 $("#btnRun").onclick = async () => { if (DEMO) { toast("Scans can be started once you're signed in."); return; }
   try { await dispatch("full"); toast("Scan started — about 5 minutes. This page updates itself."); watchForUpdate("Scanning…"); } catch (e) { toast(e.message); } };
 $("#btnKeys").onclick = () => $("#dlgKeys").showModal();
 $("#btnLock").onclick = () => { ss.del("cfg"); ls.del("keep"); cfg = null; location.reload(); };
-$("#btnSettings").onclick = () => { $("#setInfo").textContent = DEMO ? "Preview snapshot." : `Connected to ${cfg.owner}/${cfg.repo} (${cfg.branch || "main"}).`; $("#dlgSettings").showModal(); };
+$("#btnSettings").onclick = () => { const b2 = $("#bmLink2"); b2.setAttribute("href", bookmarkletHref()); b2.onclick = e => { e.preventDefault(); toast("Drag the button to your bookmarks bar."); }; $("#setInfo").textContent = DEMO ? "Preview snapshot." : `Connected to ${cfg.owner}/${cfg.repo} (${cfg.branch || "main"}).`; $("#dlgSettings").showModal(); };
 $("#btnForget").onclick = () => { ls.del("keep"); ss.del("cfg"); location.reload(); };
 $("#formPw").onsubmit = async e => { e.preventDefault(); const a = $("#npw").value, b = $("#npw2").value;
   if (a.length < 12) { $("#npwErr").textContent = "Use at least 12 characters."; return; }
@@ -882,6 +972,7 @@ $("#formPw").onsubmit = async e => { e.preventDefault(); const a = $("#npw").val
 document.addEventListener("keydown", e => {
   if (e.metaKey || e.ctrlKey || e.altKey || $("#shell").classList.contains("hidden")) return;
   if (/^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName) || document.querySelector("dialog[open]")) { if (e.key === "Escape") document.activeElement.blur(); return; }
+  if (e.key === "Escape" && $("#review") && $("#review").classList.contains("show")) { $("#review").classList.remove("show"); return; }
   const j = jobs.find(x => x.id === selected), k = e.key.toLowerCase();
   if (/^[1-5]$/.test(k)) return go(VIEWS[+k - 1][0]);
   if (k === "?") return $("#dlgKeys").showModal();
@@ -903,6 +994,8 @@ function showLock(mode){
   setTimeout(() => (mode === "unlock" ? $("#pw") : $("#suToken")).focus(), 50);
 }
 function enterApp(){ $("#lock").classList.add("hidden"); $("#shell").classList.remove("hidden"); load(); }
+document.querySelectorAll("[data-eye]").forEach(b => b.onclick = () => { const el = $("#" + b.dataset.eye), show = el.type === "password";
+  el.type = show ? "text" : "password"; b.setAttribute("aria-label", show ? "Hide password" : "Show password"); el.focus(); });
 $("#toSetup").onclick = () => showLock("setup");
 $("#toUnlock").onclick = () => showLock("unlock");
 $("#suPw").addEventListener("input", e => { const v = e.target.value, sc = (v.length >= 12) + (v.length >= 16) + /[^a-zA-Z]/.test(v) + (/\s/.test(v) || v.length >= 20);
