@@ -93,8 +93,8 @@ svg.i{width:16px;height:16px;flex:none;stroke:currentColor;fill:none;stroke-widt
 .btn.block{width:100%}
 .input,.textarea,.select{width:100%;border:1px solid var(--input);background:transparent;border-radius:calc(var(--radius) - 2px);box-shadow:var(--shadow-sm);font-size:14px;transition:border-color .15s,box-shadow .15s}
 .input{height:36px;padding:0 12px}
-.select{height:36px;padding:0 32px 0 12px;appearance:none;-webkit-appearance:none;cursor:pointer;line-height:1;background:var(--background) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2371717a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") no-repeat right 10px center/16px}
-.select.sm{height:32px;font-size:13px;padding:0 30px 0 10px;background-position:right 8px center}
+.select{height:36px;padding:0 28px 0 12px;appearance:none;-webkit-appearance:none;cursor:pointer;line-height:1;background:var(--background) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2371717a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") no-repeat right 8px center/14px}
+.select.sm{height:32px;font-size:13px;padding:0 24px 0 10px;background-position:right 6px center;background-size:14px}
 .textarea{min-height:76px;padding:8px 12px;line-height:1.55;resize:vertical}
 .textarea.tall{min-height:180px}
 .input:focus,.textarea:focus,.select:focus{outline:none;border-color:var(--ring);box-shadow:0 0 0 3px color-mix(in srgb,var(--ring) 25%,transparent)}
@@ -349,7 +349,8 @@ dialog .d-d{color:var(--muted-foreground);margin:6px 0 20px}
   /* tables turn into stacked rows */
   .tbl thead{display:none}
   .tbl,.tbl tbody,.tbl tr,.tbl td{display:block;width:100%}
-  .tbl tr{padding:12px 0;border-bottom:1px solid var(--border)}
+  .tbl tr{padding:12px 16px;border-bottom:1px solid var(--border)}
+  .tbl .select{width:auto;min-width:0;flex:none}
   .tbl tr:last-child{border-bottom:0}
   .tbl td{border:0;padding:3px 0;display:flex;justify-content:space-between;align-items:center;gap:12px;text-align:right}
   .tbl td::before{content:attr(data-label);color:var(--muted-foreground);font-size:13px;text-align:left;flex:none}
@@ -1033,7 +1034,7 @@ function trackerView(){
     ${rows.map(j => { const s = st(j.id), d0 = days(appliedAt(j.id));
       const next = s === "applied" ? (d0 >= 7 ? `<span class="badge warning">Follow up</span>` : `<span class="muted">Wait ${7 - (d0 || 0)} days</span>`) : s === "interview" ? `<span class="badge info">Prepare</span>` : s === "offer" ? `<span class="badge success">Negotiate</span>` : `<span class="muted">—</span>`;
       return `<tr><td><button class="linkish" data-open="${esc(j.id)}">${esc(j.title)}</button><div class="muted" style="font-size:13px">${esc(j.company)}</div></td>
-        <td><select class="select sm" data-st="${esc(j.id)}" aria-label="Status">${opt(s)}</select></td><td class="num">${d0 == null ? "—" : dayLabel(d0)}</td><td>${next}</td>
+        <td data-label="Status"><select class="select sm" data-st="${esc(j.id)}" aria-label="Status">${opt(s)}</select></td><td class="num" data-label="Applied">${d0 == null ? "—" : dayLabel(d0)}</td><td data-label="Next step">${next}</td>
         <td class="hide-m muted" style="font-size:13px;max-width:260px">${esc(((status[j.id] || {}).note || "").slice(0, 120))}</td></tr>`; }).join("")}
     </tbody></table></div></div>`;
 }
