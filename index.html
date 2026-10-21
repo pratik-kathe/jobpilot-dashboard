@@ -974,7 +974,13 @@ async function renderAnswers(j){
     return `<div class="ans"><div class="ans-h"><span>${esc(l)}</span><button class="btn ghost xs" data-cp="${k}">${ic("copy")}Copy</button></div>
       ${short ? `<input class="input" data-k="${k}" value="${esc(val)}">` : `<textarea class="textarea ${tall ? "tall" : ""}" data-k="${k}">${esc(val)}</textarea>`}</div>`; }).join("")
     + `<div class="row" style="align-items:center;gap:12px;margin-top:16px"><button class="btn outline sm" id="copyAll">${ic("copy")}Copy all answers</button>
-      <span class="muted" style="font-size:13px">Resume covers ${p.ats.covered_after} of ${p.ats.jd_terms} skills this job mentions${p.keywords_missing && p.keywords_missing.length ? ` · missing: ${p.keywords_missing.slice(0, 4).map(esc).join(", ")}` : ""}</span></div>`;
+      <span class="muted" style="font-size:13px">Resume covers ${p.ats.covered_after} of ${p.ats.jd_terms} skills this job mentions${p.keywords_missing && p.keywords_missing.length ? ` · missing: ${p.keywords_missing.slice(0, 4).map(esc).join(", ")}` : ""}</span></div>`
+    + (p.changes && p.changes.length ? `<details class="changes" style="margin-top:16px"><summary style="cursor:pointer;font-weight:600">What changed for this job (${p.changes.length})</summary>
+      ${p.job_priorities && p.job_priorities.length ? `<p class="muted" style="font-size:13px;margin:10px 0">This job cares most about: ${p.job_priorities.map(esc).join(" · ")}</p>` : ""}
+      ${p.changes.map(c => `<div style="margin:12px 0;font-size:13px;line-height:1.5"><div style="font-weight:600">${esc(c.section)}</div>
+        <div class="muted" style="text-decoration:${c.section.endsWith("bullet") || c.section === "Summary" || c.section === "Headline" ? "line-through" : "none"}">${esc(c.before)}</div>
+        <div>${esc(c.after)}</div></div>`).join("")}
+      ${p.guard_log && p.guard_log.length ? `<p class="muted" style="font-size:12px">Kept original to stay truthful: ${p.guard_log.map(esc).join("; ")}</p>` : ""}</details>` : "");
   box.querySelectorAll("[data-k]").forEach(el => el.addEventListener("input", () => { drafts[j.id] = { ...(drafts[j.id] || {}), [el.dataset.k]: el.value }; ls.set("drafts", drafts); }));
   box.querySelectorAll("[data-cp]").forEach(b => b.onclick = () => { copyText(box.querySelector(`[data-k="${b.dataset.cp}"]`).value, b); markStep(j.id, 3); });
   if (to) {
