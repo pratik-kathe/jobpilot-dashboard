@@ -489,7 +489,7 @@ dialog .d-d{color:var(--muted-foreground);margin:6px 0 20px}
 
 <dialog id="dlgAdd">
   <h3>Tailor a job</h3>
-  <p class="d-d" id="addHint">Paste any job you found. Your tailored resume, cover note and answers are ready in about 2 minutes.</p>
+  <p class="d-d" id="addHint">Paste any job you found. Your tailored resume, cover note and answers are ready in about a minute.</p>
   <form method="dialog" id="formAdd">
     <div class="grid2" style="gap:12px"><div class="field"><label class="label" for="aTitle">Job title</label><input class="input" id="aTitle" required></div>
     <div class="field"><label class="label" for="aCompany">Company</label><input class="input" id="aCompany" required></div></div>
@@ -832,7 +832,7 @@ async function setStatus(j, s, { advance = false, note: noteOnly = false } = {})
   finally { saving = false; }
 }
 let watching = null;
-function watchForUpdate(label){
+function watchForUpdate(label, every = 30000){
   if (DEMO) return;
   const start = updatedAt, t0 = Date.now();
   $("#running").classList.add("on"); $("#runningText").textContent = label; clearInterval(watching);
@@ -841,12 +841,12 @@ function watchForUpdate(label){
       if (j && j.updated_at !== start) { clearInterval(watching); $("#running").classList.remove("on"); await load(true); toast("Updated with the latest results"); }
       else if (Date.now() - t0 > 12 * 60e3) { clearInterval(watching); $("#running").classList.remove("on"); toast("Still running — check back in a few minutes."); }
     } catch {}
-  }, 30000);
+  }, every);
 }
 async function requestPack(payload){
   if (DEMO) { toast("Packs can be created once you're signed in."); return; }
   await writeFile(`data/requests/${Date.now()}.json`, JSON.stringify(payload, null, 1), `request pack: ${payload.title || payload.job_id}`.slice(0, 120));
-  await dispatch("requests"); toast("Creating your pack — about 2 minutes"); watchForUpdate("Creating pack…");
+  await dispatch("requests"); toast("Creating your pack — about a minute"); watchForUpdate("Creating pack…", 8000);
 }
 
 function renderDetail(){
@@ -1118,7 +1118,7 @@ $("#dlgAdd").addEventListener("close", () => { if ($("#dlgAdd").returnValue !== 
   const payload = { title: $("#aTitle").value.trim(), company: $("#aCompany").value.trim(), url: $("#aUrl").value.trim(), description: $("#aJd").value.trim() };
   if (incomingJobId) payload.job_id = incomingJobId;
   incomingJobId = null;
-  requestPack(payload).then(() => { $("#formAdd").reset(); $("#addHint").textContent = "Paste any job you found. Your tailored resume, cover note and answers are ready in about 2 minutes."; }).catch(e => toast(e.message)); });
+  requestPack(payload).then(() => { $("#formAdd").reset(); $("#addHint").textContent = "Paste any job you found. Your tailored resume, cover note and answers are ready in about a minute."; }).catch(e => toast(e.message)); });
 $("#btnAdd").addEventListener("click", () => { incomingJobId = null; });
 $("#btnRun").onclick = async () => { if (DEMO) { toast("Scans can be started once you're signed in."); return; }
   try { await dispatch("full"); toast("Scan started — about 5 minutes. This page updates itself."); watchForUpdate("Scanning…"); } catch (e) { toast(e.message); } };
